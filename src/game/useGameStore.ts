@@ -7,7 +7,6 @@ import {
   FIELD,
   SCORE_PER_AMMO_BONUS,
   SCORE_PER_CITY_BONUS,
-  incomingSpeedForWave,
 } from './constants'
 import type {
   BatteryState,
@@ -62,7 +61,7 @@ interface GameState {
   awardWaveBonus: () => void
 }
 
-export const useGameStore = create<GameState>((set, get) => ({
+export const useGameStore = create<GameState>()((set, get) => ({
   status: 'menu',
   score: 0,
   highScore: Number(localStorage.getItem('mc3d-highscore') ?? 0),
@@ -194,19 +193,3 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 // Non-reactive helpers for the game loop (avoids subscribing components to fast state).
 export const getGame = useGameStore.getState
-
-export function newIncoming(wave: number, targetX: number, targetId: string): IncomingMissile {
-  const startX = targetX + (Math.random() - 0.5) * 18
-  const clampedStartX = Math.max(FIELD.minX, Math.min(FIELD.maxX, startX))
-  const start = new Vector3(clampedStartX, FIELD.skyY, 0)
-  const target = new Vector3(targetX, FIELD.groundY + 0.4, 0)
-  return {
-    id: genId(),
-    pos: start.clone(),
-    start,
-    target,
-    targetId,
-    speed: incomingSpeedForWave(wave),
-    alive: true,
-  }
-}

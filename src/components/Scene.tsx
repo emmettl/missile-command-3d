@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
-import { ThreeEvent, useThree } from '@react-three/fiber'
+import { ThreeEvent, useFrame, useThree } from '@react-three/fiber'
 import { FIELD, COLORS } from '../game/constants'
 import { useGameStore } from '../game/useGameStore'
+import { stepShake } from '../game/shake'
 import { unlockAudio, Sfx } from '../game/audio'
 import { Ground } from './Ground'
 import { City } from './City'
@@ -11,11 +12,27 @@ import { IncomingView, PlayerView } from './Missiles'
 import { ExplosionView } from './Explosion'
 import { GameLoop } from './GameLoop'
 
+const BASE_CAM = [0, 12, 36] as const
+
 function CameraRig() {
   const camera = useThree((s) => s.camera)
   useEffect(() => {
+    camera.position.set(...BASE_CAM)
     camera.lookAt(0, 10, 0)
   }, [camera])
+  useFrame((_, dt) => {
+    const energy = stepShake(dt)
+    if (energy <= 0) {
+      camera.position.set(...BASE_CAM)
+    } else {
+      camera.position.set(
+        BASE_CAM[0] + (Math.random() - 0.5) * energy,
+        BASE_CAM[1] + (Math.random() - 0.5) * energy,
+        BASE_CAM[2],
+      )
+    }
+    camera.lookAt(0, 10, 0)
+  })
   return null
 }
 

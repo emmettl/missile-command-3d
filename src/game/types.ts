@@ -19,6 +19,8 @@ export interface BatteryState {
 // game loop every frame; React only re-renders the entity lists when entities are
 // added or removed (the array reference changes).
 
+export type IncomingKind = 'normal' | 'mirv' | 'smart'
+
 export interface IncomingMissile {
   id: number
   pos: Vector3
@@ -27,6 +29,10 @@ export interface IncomingMissile {
   targetId: string // city or battery id it is aimed at
   speed: number
   alive: boolean
+  kind: IncomingKind
+  splitsLeft: number // MIRV warheads still to release (0 for non-splitters)
+  splitAltitude: number // y at which a MIRV releases its warheads
+  dodge: boolean // smart bombs steer away from nearby explosions
 }
 
 export interface PlayerMissile {

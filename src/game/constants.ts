@@ -38,8 +38,31 @@ export const EXPLOSION_SHRINK_TIME = 0.5 // s to collapse
 export const INCOMING_BASE_SPEED = 3.2 // units / second at wave 1
 export const INCOMING_SPEED_PER_WAVE = 0.55
 
+// MIRV splitters: an incoming warhead that fans out into several children mid-descent.
+export const MIRV_FIRST_WAVE = 2
+export const MIRV_CHILDREN_MIN = 2
+export const MIRV_CHILDREN_MAX = 3
+export function mirvChanceForWave(wave: number): number {
+  if (wave < MIRV_FIRST_WAVE) return 0
+  return Math.min(0.4, 0.1 + (wave - MIRV_FIRST_WAVE) * 0.06)
+}
+
+// Smart bombs: steer away from nearby explosions, so they must be hit directly.
+export const SMART_FIRST_WAVE = 3
+export const SMART_DODGE_RANGE = 4.2 // starts evading when a blast is this close
+export const SMART_DODGE_SPEED = 9 // lateral units / second while dodging
+export function smartChanceForWave(wave: number): number {
+  if (wave < SMART_FIRST_WAVE) return 0
+  return Math.min(0.22, 0.06 + (wave - SMART_FIRST_WAVE) * 0.04)
+}
+
 // Scoring
 export const SCORE_PER_MISSILE = 25
+export const SCORE_BY_KIND: Record<'normal' | 'mirv' | 'smart', number> = {
+  normal: 25,
+  mirv: 40,
+  smart: 75,
+}
 export const SCORE_PER_CITY_BONUS = 100
 export const SCORE_PER_AMMO_BONUS = 5
 
@@ -57,6 +80,10 @@ export const COLORS = {
   playerTrail: '#0aa9c4',
   enemy: '#ff5a5a',
   enemyTrail: '#7a1f1f',
+  mirv: '#ff9d3c',
+  mirvTrail: '#7a4a12',
+  smart: '#e05dff',
+  smartTrail: '#5a1f7a',
   explosion: '#ffe14d',
   city: '#7aa8ff',
   cityDead: '#3a3a44',

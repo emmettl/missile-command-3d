@@ -7,9 +7,14 @@ import {
   EXPLOSION_MAX_RADIUS,
   EXPLOSION_SHRINK_TIME,
   PLAYER_MISSILE_SPEED,
-  SCORE_PER_MISSILE,
+  SCORE_BY_KIND,
+  mirvChanceForWave,
+  smartChanceForWave,
 } from '../game/constants'
-import { getGame, newIncoming, useGameStore } from '../game/useGameStore'
+import type { IncomingKind } from '../game/types'
+import { applyDodge, maybeSplit, newIncoming } from '../game/incoming'
+import { getGame, useGameStore } from '../game/useGameStore'
+import { addShake } from '../game/shake'
 import { Sfx } from '../game/audio'
 
 const EXPLOSION_TOTAL = EXPLOSION_GROW_TIME + EXPLOSION_HOLD_TIME + EXPLOSION_SHRINK_TIME
@@ -51,7 +56,7 @@ export function GameLoop() {
         if (spawnTimer.current <= 0) {
           const target = pickTarget()
           if (target) {
-            g.addIncoming(newIncoming(wave, target.x, target.id))
+            g.addIncoming(newIncoming(wave, target.x, target.id, chooseKind(wave)))
             useGameStore.setState({ spawnedThisWave: g.spawnedThisWave + 1 })
           }
           const interval = Math.max(0.35, 1.4 - wave * 0.08) * (0.6 + Math.random() * 0.8)
@@ -77,6 +82,18 @@ export function GameLoop() {
       // --- Advance incoming enemy missiles ---
       for (const m of g.incoming) {
         if (!m.alive) continue
+
+        // MIRV release: fan out into several warheads at the split altitude.
+        const kids = maybeSplit(m, pickTarget)
+        if (kids.length > 0) {
+          for (const kid of kids) g.addIncoming(kid)
+          structuralChange = true
+          if (g.soundOn) Sfx.launch()
+        }
+
+        // Smart-bomb evasion: veer away from the nearest active blast.
+        applyDodge(m, g.explosions, dt)
+
         const step = m.speed * dt
         if (m.pos.distanceTo(m.target) <= step) {
           m.pos.copy(m.target)
@@ -84,6 +101,7 @@ export function GameLoop() {
           structuralChange = true
           g.addExplosion(m.target)
           g.destroyTarget(m.targetId)
+          addShake(0.7)
           if (g.soundOn) Sfx.cityHit()
         } else {
           m.pos.addScaledVector(dirTo(m.pos, m.target), step)
@@ -98,7 +116,7 @@ export function GameLoop() {
           if (m.pos.distanceTo(e.pos) <= e.radius + 0.28) {
             m.alive = false
             structuralChange = true
-            g.addScore(SCORE_PER_MISSILE)
+            g.addScore(SCORE_BY_KIND[m.kind])
             g.addExplosion(m.pos) // chain reaction
             if (g.soundOn) Sfx.explosion()
           }
@@ -110,6 +128,7 @@ export function GameLoop() {
       const batteryUsable = g.batteries.some((b) => !b.destroyed)
       if (!cityAlive || !batteryUsable) {
         g.setStatus('gameover')
+        addShake(1.6)
         if (g.soundOn) Sfx.gameOver()
       } else if (g.spawnedThisWave >= g.toSpawn && !g.incoming.some((m) => m.alive)) {
         g.awardWaveBonus()
@@ -139,6 +158,13 @@ function pickTarget() {
   ]
   if (targets.length === 0) return null
   return targets[Math.floor(Math.random() * targets.length)]
+}
+
+function chooseKind(wave: number): IncomingKind {
+  const r = Math.random()
+  if (r < smartChanceForWave(wave)) return 'smart'
+  if (r < smartChanceForWave(wave) + mirvChanceForWave(wave)) return 'mirv'
+  return 'normal'
 }
 
 const _dir = new Vector3()
