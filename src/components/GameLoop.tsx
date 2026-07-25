@@ -111,7 +111,7 @@ export function GameLoop() {
           m.alive = false
           structuralChange = true
           g.addExplosion(m.target)
-          g.addShockwave(new Vector3(m.target.x, 0.02, 0))
+          g.addShockwave(new Vector3(m.target.x, 0.02, m.target.z))
           g.destroyTarget(m.targetId)
           addShake(0.7)
           if (g.soundOn) Sfx.cityHit()

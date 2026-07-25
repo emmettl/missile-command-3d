@@ -5,7 +5,7 @@ import { FIELD, COLORS } from '../game/constants'
 import { useGameStore } from '../game/useGameStore'
 import { stepShake } from '../game/shake'
 import { unlockAudio, Sfx } from '../game/audio'
-import { Ground } from './Ground'
+import { ReflectiveFloor } from './ReflectiveFloor'
 import { GridFloor } from './GridFloor'
 import { City } from './City'
 import { Battery } from './Battery'
@@ -82,8 +82,8 @@ export function Scene() {
       <directionalLight position={[10, 30, 20]} intensity={0.6} />
 
       <Starfield />
+      <ReflectiveFloor />
       <GridFloor />
-      <Ground />
 
       {cities.map((c) => (
         <City key={c.id} city={c} />

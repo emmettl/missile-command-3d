@@ -12,6 +12,12 @@ import type { Explosion, IncomingKind, IncomingMissile } from './types'
 let nextId = 1
 const genId = () => nextId++
 
+// Incoming missiles arrive across a shallow depth band (z) rather than all in the
+// z = 0 plane, so the battlefield reads as a volume. The band is kept within the
+// counter-explosion radius so interception stays fair.
+const START_Z_SPREAD = 5 // start depth in [-2.5, 2.5]
+const TARGET_Z_SPREAD = 2 // impact depth in [-1, 1], near the city plane
+
 export function newIncoming(
   wave: number,
   targetX: number,
@@ -20,8 +26,8 @@ export function newIncoming(
 ): IncomingMissile {
   const startX = targetX + (Math.random() - 0.5) * 18
   const clampedStartX = Math.max(FIELD.minX, Math.min(FIELD.maxX, startX))
-  const start = new Vector3(clampedStartX, FIELD.skyY, 0)
-  const target = new Vector3(targetX, FIELD.groundY + 0.4, 0)
+  const start = new Vector3(clampedStartX, FIELD.skyY, (Math.random() - 0.5) * START_Z_SPREAD)
+  const target = new Vector3(targetX, FIELD.groundY + 0.4, (Math.random() - 0.5) * TARGET_Z_SPREAD)
   return {
     id: genId(),
     pos: start.clone(),
@@ -51,7 +57,7 @@ export function splitChild(
     id: genId(),
     pos: start.clone(),
     start,
-    target: new Vector3(targetX, FIELD.groundY + 0.4, 0),
+    target: new Vector3(targetX, FIELD.groundY + 0.4, (Math.random() - 0.5) * TARGET_Z_SPREAD),
     targetId,
     speed,
     alive: true,
