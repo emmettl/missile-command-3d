@@ -35,6 +35,10 @@ export const EXPLOSION_GROW_TIME = 0.35 // s to reach max radius
 export const EXPLOSION_HOLD_TIME = 0.35 // s at max radius
 export const EXPLOSION_SHRINK_TIME = 0.5 // s to collapse
 
+// Ground shockwave ring cast when a warhead strikes the surface.
+export const SHOCKWAVE_DURATION = 1.1
+export const SHOCKWAVE_MAX_RADIUS = 6.5
+
 export const INCOMING_BASE_SPEED = 3.2 // units / second at wave 1
 export const INCOMING_SPEED_PER_WAVE = 0.55
 

@@ -50,3 +50,11 @@ export interface Explosion {
   radius: number // current radius, updated each frame
   dead: boolean
 }
+
+// A flat ring that expands across the ground plane when a warhead strikes.
+export interface ShockWave {
+  id: number
+  pos: Vector3
+  age: number
+  dead: boolean
+}

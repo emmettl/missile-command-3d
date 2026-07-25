@@ -16,6 +16,7 @@ import type {
   GameStatus,
   IncomingMissile,
   PlayerMissile,
+  ShockWave,
 } from './types'
 
 let nextId = 1
@@ -44,6 +45,7 @@ interface GameState {
   incoming: IncomingMissile[]
   players: PlayerMissile[]
   explosions: Explosion[]
+  shockwaves: ShockWave[]
 
   // wave spawn bookkeeping (managed by the game loop)
   toSpawn: number
@@ -57,6 +59,7 @@ interface GameState {
   fireAt: (x: number, y: number) => boolean
   addIncoming: (m: IncomingMissile) => void
   addExplosion: (pos: Vector3) => void
+  addShockwave: (pos: Vector3) => void
   destroyTarget: (id: string) => void
   addScore: (n: number) => void
   commitPrune: () => void
@@ -80,6 +83,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
   incoming: [],
   players: [],
   explosions: [],
+  shockwaves: [],
 
   toSpawn: 0,
   spawnedThisWave: 0,
@@ -98,6 +102,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       incoming: [],
       players: [],
       explosions: [],
+      shockwaves: [],
     })
     get().beginWave(1)
   },
@@ -127,6 +132,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       incoming: [],
       players: [],
       explosions: [],
+      shockwaves: [],
       toSpawn: count,
       spawnedThisWave: 0,
       spawnTimer: 1.0, // small breather before the first missile
@@ -171,6 +177,11 @@ export const useGameStore = create<GameState>()((set, get) => ({
     set({ explosions: [...get().explosions, e] })
   },
 
+  addShockwave: (pos: Vector3) => {
+    const s: ShockWave = { id: genId(), pos: pos.clone(), age: 0, dead: false }
+    set({ shockwaves: [...get().shockwaves, s] })
+  },
+
   destroyTarget: (id: string) => {
     const cities = get().cities.map((c) => (c.id === id ? { ...c, alive: false } : c))
     const batteries = get().batteries.map((b) =>
@@ -194,6 +205,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       incoming: get().incoming.filter((m) => m.alive),
       players: get().players.filter((m) => m.alive),
       explosions: get().explosions.filter((e) => !e.dead),
+      shockwaves: get().shockwaves.filter((s) => !s.dead),
     })
   },
 

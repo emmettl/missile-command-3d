@@ -38,8 +38,8 @@ Open http://localhost:5173.
 ```
 src/
   game/        constants, types, zustand store, incoming (MIRV/dodge), audio, shake
-  components/   IntroScene (globe dive), Scene, GameLoop, Ground, City, Battery,
-                Missiles, Explosion, Starfield, Trail
+  components/   IntroScene (globe dive), Scene, GameLoop, GridFloor, Ground, City,
+                Battery, Missiles, Explosion, Shockwave, Starfield, Trail
   ui/           HUD, IntroOverlay, Overlay, GameBanners (wave/bonus/flash)
 ```
 

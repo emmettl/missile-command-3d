@@ -8,6 +8,7 @@ import {
   EXPLOSION_SHRINK_TIME,
   PLAYER_MISSILE_SPEED,
   SCORE_BY_KIND,
+  SHOCKWAVE_DURATION,
   mirvChanceForWave,
   smartChanceForWave,
 } from '../game/constants'
@@ -43,6 +44,16 @@ export function GameLoop() {
       e.radius = radiusForAge(e.age)
       if (e.age >= EXPLOSION_TOTAL) {
         e.dead = true
+        structuralChange = true
+      }
+    }
+
+    // --- Ground shockwaves expand and fade ---
+    for (const s of g.shockwaves) {
+      if (s.dead) continue
+      s.age += dt
+      if (s.age >= SHOCKWAVE_DURATION) {
+        s.dead = true
         structuralChange = true
       }
     }
@@ -100,6 +111,7 @@ export function GameLoop() {
           m.alive = false
           structuralChange = true
           g.addExplosion(m.target)
+          g.addShockwave(new Vector3(m.target.x, 0.02, 0))
           g.destroyTarget(m.targetId)
           addShake(0.7)
           if (g.soundOn) Sfx.cityHit()
