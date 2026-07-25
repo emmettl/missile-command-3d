@@ -1,6 +1,6 @@
 import { Vector3 } from 'three'
 
-export type GameStatus = 'menu' | 'playing' | 'wave-clear' | 'gameover'
+export type GameStatus = 'menu' | 'launching' | 'playing' | 'wave-clear' | 'gameover'
 
 export interface CityState {
   id: string

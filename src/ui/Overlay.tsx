@@ -41,33 +41,6 @@ export function Overlay() {
     )
   }
 
-  // menu
-  return (
-    <div className="overlay">
-      <div className="overlay-card">
-        <h1 className="title">MISSILE COMMAND</h1>
-        <p className="subtitle">3D</p>
-        <p className="muted rules">
-          Click to fire counter-missiles from your nearest battery. Detonate them in the path of
-          incoming warheads to protect your six cities. Batteries reload each wave — spend your ammo
-          wisely.
-        </p>
-        <div className="legend">
-          <span>
-            <i className="dot" style={{ background: '#ff5a5a' }} /> warhead
-          </span>
-          <span>
-            <i className="dot" style={{ background: '#ff9d3c' }} /> MIRV — splits
-          </span>
-          <span>
-            <i className="dot" style={{ background: '#e05dff' }} /> smart — dodges
-          </span>
-        </div>
-        <button className="btn" onClick={start}>
-          START
-        </button>
-        {highScore > 0 && <p className="muted">high score {highScore.toLocaleString()}</p>}
-      </div>
-    </div>
-  )
+  // The menu/launching states are handled by IntroOverlay + IntroScene.
+  return null
 }

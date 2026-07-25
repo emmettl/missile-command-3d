@@ -75,4 +75,12 @@ export const Sfx = {
   },
   gameOver: () => tone({ freq: 300, toFreq: 60, duration: 1.0, type: 'sawtooth', gain: 0.2 }),
   empty: () => tone({ freq: 120, duration: 0.08, type: 'square', gain: 0.08 }),
+  dive: () => {
+    tone({ freq: 90, toFreq: 1300, duration: 1.9, type: 'sawtooth', gain: 0.12 })
+    tone({ freq: 140, toFreq: 900, duration: 1.9, type: 'sine', gain: 0.1 })
+  },
+  bonus: () => {
+    tone({ freq: 660, duration: 0.12, type: 'triangle', gain: 0.14 })
+    setTimeout(() => tone({ freq: 990, duration: 0.18, type: 'triangle', gain: 0.14 }), 110)
+  },
 }

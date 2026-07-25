@@ -1,7 +1,10 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
 :root {
   --cyan: #38f0ff;
   --red: #ff5a5a;
   --ink: #05060f;
+  --pixel: 'Press Start 2P', 'Menlo', monospace;
 }
 
 * {
@@ -242,4 +245,164 @@ h1.danger {
 
 .btn:active {
   transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---------- Intro (globe title card) ---------- */
+.intro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.intro > * {
+  pointer-events: auto;
+}
+
+.intro.leaving {
+  opacity: 0;
+  transform: scale(1.35);
+}
+
+.intro-title {
+  font-family: var(--pixel);
+  font-size: clamp(24px, 6vw, 58px);
+  line-height: 1.35;
+  text-align: center;
+  margin: 0;
+  color: var(--cyan);
+  text-shadow:
+    0 0 18px rgba(56, 240, 255, 0.55),
+    4px 4px 0 rgba(10, 30, 60, 0.9);
+  letter-spacing: 2px;
+}
+
+.intro-sub {
+  font-family: var(--pixel);
+  font-size: clamp(12px, 2vw, 20px);
+  letter-spacing: 8px;
+  color: #9fb4ff;
+  margin-bottom: 10px;
+  text-shadow: 0 0 12px rgba(122, 160, 255, 0.5);
+}
+
+.intro-legend {
+  margin: 4px 0 20px;
+}
+
+.intro-btn {
+  font-family: var(--pixel);
+  font-size: 15px;
+  padding: 16px 30px;
+}
+
+.intro-hi {
+  font-family: var(--pixel);
+  font-size: 10px;
+  margin-top: 12px;
+}
+
+/* ---------- Wave banner ---------- */
+.wave-banner {
+  position: absolute;
+  top: 20%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  pointer-events: none;
+  animation: bannerIn 0.4s ease-out;
+}
+
+.wb-wave {
+  font-family: var(--pixel);
+  font-size: clamp(20px, 4vw, 40px);
+  color: var(--cyan);
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(56, 240, 255, 0.6);
+}
+
+.wb-count {
+  font-family: var(--pixel);
+  font-size: clamp(10px, 1.6vw, 15px);
+  color: var(--red);
+  margin-top: 12px;
+  letter-spacing: 2px;
+  text-shadow: 0 0 14px rgba(255, 90, 90, 0.6);
+}
+
+@keyframes bannerIn {
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ---------- Bonus toast ---------- */
+.bonus-toast {
+  position: absolute;
+  top: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--pixel);
+  font-size: 13px;
+  color: #7dff9b;
+  letter-spacing: 2px;
+  text-shadow: 0 0 14px rgba(125, 255, 155, 0.7);
+  pointer-events: none;
+  animation: toastPop 0.35s ease-out;
+}
+
+@keyframes toastPop {
+  from {
+    transform: translate(-50%, 8px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.hud-bonus {
+  font-family: var(--pixel);
+  font-size: 11px;
+  color: #7dff9b;
+  margin-left: 6px;
+  text-shadow: 0 0 10px rgba(125, 255, 155, 0.6);
+}
+
+/* ---------- Transition flash ---------- */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: #eaf6ff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.flash.on {
+  animation: flashOut 0.65s ease-out;
+}
+
+@keyframes flashOut {
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
 }

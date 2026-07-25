@@ -8,8 +8,9 @@ export function HUD() {
   const soundOn = useGameStore((s) => s.soundOn)
   const toggleSound = useGameStore((s) => s.toggleSound)
   const cities = useGameStore((s) => s.cities)
+  const bonusCities = useGameStore((s) => s.bonusCities)
 
-  if (status === 'menu') return null
+  if (status === 'menu' || status === 'launching') return null
 
   const alive = cities.filter((c) => c.alive).length
 
@@ -26,6 +27,7 @@ export function HUD() {
             <span key={c.id} className={c.alive ? 'city-dot alive' : 'city-dot dead'} />
           ))}
           <span className="hud-sub"> {alive}/6</span>
+          {bonusCities > 0 && <span className="hud-bonus">+{bonusCities}</span>}
         </div>
       </div>
       <button className="hud-sound" onClick={toggleSound} aria-label="toggle sound">

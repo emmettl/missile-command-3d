@@ -3,6 +3,7 @@ import { Vector3 } from 'three'
 import {
   AMMO_PER_BATTERY,
   BATTERIES,
+  BONUS_CITY_SCORE,
   CITIES,
   FIELD,
   SCORE_PER_AMMO_BONUS,
@@ -34,6 +35,8 @@ interface GameState {
   highScore: number
   wave: number
   soundOn: boolean
+  bonusCities: number // reserve cities earned by score, spent to rebuild at wave start
+  waveBannerId: number // bumped each wave so the intro banner re-triggers
 
   cities: CityState[]
   batteries: BatteryState[]
@@ -48,6 +51,7 @@ interface GameState {
   spawnTimer: number
 
   // actions
+  launch: () => void
   startGame: () => void
   beginWave: (wave: number) => void
   fireAt: (x: number, y: number) => boolean
@@ -67,6 +71,8 @@ export const useGameStore = create<GameState>()((set, get) => ({
   highScore: Number(localStorage.getItem('mc3d-highscore') ?? 0),
   wave: 1,
   soundOn: true,
+  bonusCities: 0,
+  waveBannerId: 0,
 
   cities: freshCities(),
   batteries: freshBatteries(),
@@ -79,11 +85,14 @@ export const useGameStore = create<GameState>()((set, get) => ({
   spawnedThisWave: 0,
   spawnTimer: 0,
 
+  launch: () => set({ status: 'launching' }),
+
   startGame: () => {
     set({
       status: 'playing',
       score: 0,
       wave: 1,
+      bonusCities: 0,
       cities: freshCities(),
       batteries: freshBatteries(),
       incoming: [],
@@ -98,11 +107,23 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const batteries = get().batteries.map((b) =>
       b.destroyed ? b : { ...b, ammo: AMMO_PER_BATTERY },
     )
+    // Spend reserve cities to rebuild destroyed ones.
+    let bonus = get().bonusCities
+    const cities = get().cities.map((c) => {
+      if (!c.alive && bonus > 0) {
+        bonus -= 1
+        return { ...c, alive: true }
+      }
+      return c
+    })
     const count = 8 + wave * 2
     set({
       status: 'playing',
       wave,
+      cities,
       batteries,
+      bonusCities: bonus,
+      waveBannerId: get().waveBannerId + 1,
       incoming: [],
       players: [],
       explosions: [],
@@ -158,7 +179,13 @@ export const useGameStore = create<GameState>()((set, get) => ({
     set({ cities, batteries })
   },
 
-  addScore: (n) => set({ score: get().score + n }),
+  addScore: (n) => {
+    const before = get().score
+    const after = before + n
+    // Award a reserve city each time the score crosses a BONUS_CITY_SCORE boundary.
+    const earned = Math.floor(after / BONUS_CITY_SCORE) - Math.floor(before / BONUS_CITY_SCORE)
+    set({ score: after, bonusCities: get().bonusCities + Math.max(0, earned) })
+  },
 
   commitPrune: () => {
     // Rebuild entity arrays dropping dead entities. Called by the loop only when

@@ -1,0 +1,161 @@
+import { useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import { AdditiveBlending, BackSide, Group, Mesh, Vector3 } from 'three'
+import { COLORS } from '../game/constants'
+import { getGame } from '../game/useGameStore'
+import { Starfield } from './Starfield'
+
+const GLOBE_R = 6
+const DIVE_DURATION = 1.9 // seconds for the camera to plunge to the city
+const MENU_CAM = new Vector3(0, 2.4, 22)
+
+// The city's fixed location on the globe surface (local direction on the sphere).
+const CITY_DIR = new Vector3(0.55, 0.5, 0.8).normalize()
+const CITY_LOCAL = CITY_DIR.clone().multiplyScalar(GLOBE_R)
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+}
+
+// Wraps an angle delta to [-π, π] so the globe spins the short way into alignment.
+function shortestDelta(from: number, to: number): number {
+  let d = (to - from) % (Math.PI * 2)
+  if (d > Math.PI) d -= Math.PI * 2
+  if (d < -Math.PI) d += Math.PI * 2
+  return d
+}
+
+export function IntroScene() {
+  const camera = useThree((s) => s.camera)
+  const globe = useRef<Group>(null)
+  const marker = useRef<Mesh>(null)
+
+  // Launch-dive bookkeeping (mutated across frames, no re-renders).
+  const started = useRef(false)
+  const committed = useRef(false)
+  const progress = useRef(0)
+  const startRotY = useRef(0)
+  const targetRotY = useRef(0)
+  const startPos = useRef(new Vector3())
+  const endPos = useRef(new Vector3())
+  const lookAt = useRef(new Vector3())
+
+  useFrame((_, rawDt) => {
+    const dt = Math.min(rawDt, 0.05)
+    const status = getGame().status
+    const g = globe.current
+    if (!g) return
+
+    if (status === 'menu') {
+      g.rotation.y += dt * 0.12
+      g.rotation.x = -0.3
+      camera.position.lerp(MENU_CAM, 0.06)
+      camera.lookAt(0, 0.5, 0)
+      started.current = false
+      committed.current = false
+      progress.current = 0
+      return
+    }
+
+    if (status !== 'launching') return
+
+    if (!started.current) {
+      started.current = true
+      progress.current = 0
+      startRotY.current = g.rotation.y
+      // Rotate the globe so the city ends front-and-centre (azimuth 0).
+      const cityAzimuth = Math.atan2(CITY_LOCAL.x, CITY_LOCAL.z)
+      targetRotY.current = startRotY.current + shortestDelta(startRotY.current, -cityAzimuth)
+      // The city's world position once alignment completes.
+      const horizontal = Math.hypot(CITY_LOCAL.x, CITY_LOCAL.z)
+      const cityWorld = new Vector3(0, CITY_LOCAL.y, horizontal)
+        .applyAxisAngle(new Vector3(1, 0, 0), g.rotation.x)
+      lookAt.current.copy(cityWorld)
+      startPos.current.copy(camera.position)
+      // End just above the surface, along the outward normal.
+      endPos.current
+        .copy(cityWorld)
+        .add(cityWorld.clone().normalize().multiplyScalar(1.6))
+    }
+
+    progress.current = Math.min(1, progress.current + dt / DIVE_DURATION)
+    const e = easeInOutCubic(progress.current)
+    g.rotation.y = startRotY.current + (targetRotY.current - startRotY.current) * e
+    camera.position.lerpVectors(startPos.current, endPos.current, e)
+    camera.lookAt(lookAt.current)
+
+    if (progress.current >= 1 && !committed.current) {
+      committed.current = true
+      getGame().startGame()
+    }
+  })
+
+  return (
+    <>
+      <color attach="background" args={[COLORS.sky]} />
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[8, 10, 12]} intensity={1.1} color="#bcd0ff" />
+      <Starfield count={600} />
+
+      <group ref={globe}>
+        {/* Dark solid core so only the front wireframe reads */}
+        <mesh>
+          <sphereGeometry args={[GLOBE_R - 0.06, 48, 48]} />
+          <meshStandardMaterial color="#0a1326" metalness={0.3} roughness={0.7} />
+        </mesh>
+        {/* Wireframe lat/long shell */}
+        <mesh>
+          <sphereGeometry args={[GLOBE_R, 32, 24]} />
+          <meshBasicMaterial color={COLORS.player} wireframe transparent opacity={0.55} />
+        </mesh>
+        {/* Atmosphere glow */}
+        <mesh>
+          <sphereGeometry args={[GLOBE_R * 1.14, 48, 48]} />
+          <meshBasicMaterial
+            color={COLORS.player}
+            transparent
+            opacity={0.12}
+            side={BackSide}
+            blending={AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
+
+        {/* City marker pinned to the surface */}
+        <group position={CITY_LOCAL.toArray()}>
+          <mesh ref={marker}>
+            <sphereGeometry args={[0.22, 16, 16]} />
+            <meshStandardMaterial
+              color={COLORS.explosion}
+              emissive={COLORS.explosion}
+              emissiveIntensity={3}
+              toneMapped={false}
+            />
+          </mesh>
+          <MarkerPulse />
+        </group>
+      </group>
+    </>
+  )
+}
+
+// A ring that expands and fades outward from the city marker, like a radar ping.
+function MarkerPulse() {
+  const ring = useRef<Mesh>(null)
+  useFrame(({ clock }) => {
+    if (!ring.current) return
+    const t = (clock.elapsedTime % 1.6) / 1.6
+    const s = 0.3 + t * 2.4
+    ring.current.scale.set(s, s, s)
+    const mat = ring.current.material as { opacity: number }
+    mat.opacity = (1 - t) * 0.7
+    // Orient the ring flat against the sphere surface (face outward).
+    ring.current.lookAt(0, 0, 0)
+  })
+  return (
+    <mesh ref={ring}>
+      <ringGeometry args={[0.5, 0.62, 32]} />
+      <meshBasicMaterial color={COLORS.explosion} transparent opacity={0.6} side={2} depthWrite={false} />
+    </mesh>
+  )
+}

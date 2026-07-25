@@ -56,6 +56,10 @@ export function smartChanceForWave(wave: number): number {
   return Math.min(0.22, 0.06 + (wave - SMART_FIRST_WAVE) * 0.04)
 }
 
+// A reserve city is earned each time the score crosses a multiple of this, and is
+// spent at the start of a wave to rebuild a destroyed city (classic Missile Command).
+export const BONUS_CITY_SCORE = 3000
+
 // Scoring
 export const SCORE_PER_MISSILE = 25
 export const SCORE_BY_KIND: Record<'normal' | 'mirv' | 'smart', number> = {

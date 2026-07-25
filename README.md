@@ -15,25 +15,30 @@ Open http://localhost:5173.
 ## How to play
 
 - **Click anywhere** to fire a counter-missile from your nearest battery.
+- Press **START** on the globe intro — the camera dives into your city and the battle begins.
 - The missile flies to the click point and detonates into an expanding blast.
 - Any incoming warhead caught in a blast is destroyed — blasts chain-react.
+- Watch for **MIRVs** (orange, wave 2+) that split into several warheads, and **smart bombs**
+  (magenta, wave 3+) that dodge your blasts and must be hit directly.
 - Protect your cities. Batteries reload each wave; unused ammo and surviving cities score bonuses.
+- Every 3,000 points earns a **reserve city** that rebuilds a destroyed one at the next wave.
 - The game ends when all cities — or all batteries — are gone.
 
 ## Tech
 
-- **React 18 + TypeScript**, bundled with **Vite**
-- **@react-three/fiber** + **@react-three/drei** over **three.js**
-- **zustand** for game state; a single `useFrame` loop (`components/GameLoop.tsx`) runs the simulation
-- Procedural **WebAudio** sound (no audio assets)
+- **React 19 + TypeScript 7**, bundled with **Vite 8** (Rolldown)
+- **@react-three/fiber 9** + **@react-three/drei 10** over **three.js**
+- **zustand 5** for game state; a single `useFrame` loop (`components/GameLoop.tsx`) runs the simulation
+- Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**
 
 ## Structure
 
 ```
 src/
-  game/        constants, types, zustand store, audio engine
-  components/   Scene, GameLoop, Ground, City, Battery, Missiles, Explosion, Starfield, Trail
-  ui/           HUD, Overlay (menu / wave-clear / game-over)
+  game/        constants, types, zustand store, incoming (MIRV/dodge), audio, shake
+  components/   IntroScene (globe dive), Scene, GameLoop, Ground, City, Battery,
+                Missiles, Explosion, Starfield, Trail
+  ui/           HUD, IntroOverlay, Overlay, GameBanners (wave/bonus/flash)
 ```
 
 ## Architecture note
