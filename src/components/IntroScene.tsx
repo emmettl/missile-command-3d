@@ -1,16 +1,17 @@
-import { useRef } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { AdditiveBlending, BackSide, Group, Mesh, Vector3 } from 'three'
 import { COLORS } from '../game/constants'
 import { getGame } from '../game/useGameStore'
 import { Starfield } from './Starfield'
+import { coastlineGeometry, graticuleGeometry, latLonDir } from './earth'
 
 const GLOBE_R = 6
 const DIVE_DURATION = 1.9 // seconds for the camera to plunge to the city
 const MENU_CAM = new Vector3(0, 2.4, 22)
 
-// The city's fixed location on the globe surface (local direction on the sphere).
-const CITY_DIR = new Vector3(0.55, 0.5, 0.8).normalize()
+// The defended city sits on real land — Switzerland (the game's home).
+const CITY_DIR = latLonDir(46.8, 8.2)
 const CITY_LOCAL = CITY_DIR.clone().multiplyScalar(GLOBE_R)
 
 function easeInOutCubic(t: number): number {
@@ -29,6 +30,9 @@ export function IntroScene() {
   const camera = useThree((s) => s.camera)
   const globe = useRef<Group>(null)
   const marker = useRef<Mesh>(null)
+
+  const coastline = useMemo(() => coastlineGeometry(GLOBE_R * 1.004), [])
+  const graticule = useMemo(() => graticuleGeometry(GLOBE_R * 1.001), [])
 
   // Launch-dive bookkeeping (mutated across frames, no re-renders).
   const started = useRef(false)
@@ -98,16 +102,19 @@ export function IntroScene() {
       <Starfield count={600} />
 
       <group ref={globe}>
-        {/* Dark solid core so only the front wireframe reads */}
+        {/* Dark solid core so only the front (near-side) lines read */}
         <mesh>
-          <sphereGeometry args={[GLOBE_R - 0.06, 48, 48]} />
+          <sphereGeometry args={[GLOBE_R - 0.04, 48, 48]} />
           <meshStandardMaterial color="#0a1326" metalness={0.3} roughness={0.7} />
         </mesh>
-        {/* Wireframe lat/long shell */}
-        <mesh>
-          <sphereGeometry args={[GLOBE_R, 32, 24]} />
-          <meshBasicMaterial color={COLORS.player} wireframe transparent opacity={0.55} />
-        </mesh>
+        {/* Faint lat/long graticule */}
+        <lineSegments geometry={graticule}>
+          <lineBasicMaterial color={COLORS.player} transparent opacity={0.12} depthWrite={false} />
+        </lineSegments>
+        {/* Real continent outlines */}
+        <lineSegments geometry={coastline}>
+          <lineBasicMaterial color={COLORS.player} transparent opacity={0.95} />
+        </lineSegments>
         {/* Atmosphere glow */}
         <mesh>
           <sphereGeometry args={[GLOBE_R * 1.14, 48, 48]} />

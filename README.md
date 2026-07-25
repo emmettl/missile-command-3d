@@ -30,6 +30,8 @@ Open http://localhost:5173.
 - **@react-three/fiber 9** + **@react-three/drei 10** over **three.js**
 - **zustand 5** for game state; a single `useFrame` loop (`components/GameLoop.tsx`) runs the simulation
 - Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**
+- Intro globe outlines the **real Earth** — Natural Earth coastlines (`world-atlas`) projected
+  onto the sphere as glowing lines; the defended city is pinned to actual land
 
 ## Structure
 
