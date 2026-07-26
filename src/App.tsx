@@ -6,6 +6,8 @@ import { HUD } from './ui/HUD'
 import { Overlay } from './ui/Overlay'
 import { IntroOverlay } from './ui/IntroOverlay'
 import { BonusToast, FlashOverlay, WaveBanner } from './ui/GameBanners'
+import { RotateHint } from './ui/RotateHint'
+import { isMobile, quality } from './game/device'
 import { useGameStore } from './game/useGameStore'
 
 export default function App() {
@@ -15,15 +17,15 @@ export default function App() {
   return (
     <div className="app">
       <Canvas
-        dpr={[1, 2]}
-        gl={{ antialias: true }}
-        camera={{ position: [0, 2.4, 22], fov: 50, near: 0.1, far: 200 }}
+        dpr={[1, quality.maxDpr]}
+        gl={{ antialias: !isMobile, powerPreference: 'high-performance' }}
+        camera={{ position: [0, 2.4, 22], fov: 50, near: 0.1, far: 600 }}
       >
         {inIntro ? <IntroScene /> : <Scene />}
         <EffectComposer>
           <Bloom
             mipmapBlur
-            intensity={0.9}
+            intensity={quality.bloomIntensity}
             luminanceThreshold={0.25}
             luminanceSmoothing={0.9}
           />
@@ -35,6 +37,7 @@ export default function App() {
       <WaveBanner />
       <BonusToast />
       <FlashOverlay />
+      <RotateHint />
     </div>
   )
 }

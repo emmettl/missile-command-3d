@@ -1,8 +1,9 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { BufferGeometry, Float32BufferAttribute, Points } from 'three'
+import { quality } from '../game/device'
 
-export function Starfield({ count = 400 }: { count?: number }) {
+export function Starfield({ count = quality.starCount }: { count?: number }) {
   const ref = useRef<Points>(null)
   const geom = useMemo(() => {
     const g = new BufferGeometry()

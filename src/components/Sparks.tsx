@@ -7,6 +7,7 @@ import {
   Points,
   PointsMaterial,
 } from 'three'
+import { quality } from '../game/device'
 
 const GRAVITY = -14 // units / s², pulls sparks into a ballistic arc
 const DRAG = 0.72 // velocity retained per second
@@ -15,7 +16,7 @@ const DRAG = 0.72 // velocity retained per second
 // fixed initial velocity at mount; positions are integrated analytically from the
 // burst's age, so there is no per-frame state to keep in sync.
 export function Sparks({
-  count = 26,
+  count = quality.sparkCount,
   // Fast enough that embers clearly escape the fireball rather than being lost inside it.
   speed = 17,
   life = 1.1,

@@ -8,7 +8,14 @@ import { coastlineGeometry, graticuleGeometry, latLonDir } from './earth'
 
 const GLOBE_R = 6
 const DIVE_DURATION = 1.9 // seconds for the camera to plunge to the city
-const MENU_CAM = new Vector3(0, 2.4, 22)
+
+// Far enough back that the globe plus its halo always fits the viewport width —
+// on a narrow phone screen a fixed distance would crop the sides off.
+const GLOBE_HALF_WIDTH = GLOBE_R * 1.25
+function menuDistance(aspect: number): number {
+  const t = Math.tan((50 * Math.PI) / 180 / 2)
+  return Math.max(22, aspect > 0 ? GLOBE_HALF_WIDTH / (t * aspect) : 22)
+}
 
 // The defended city sits on real land — Switzerland (the game's home).
 const CITY_DIR = latLonDir(46.8, 8.2)
@@ -34,6 +41,12 @@ export function IntroScene() {
   const coastline = useMemo(() => coastlineGeometry(GLOBE_R * 1.004), [])
   const graticule = useMemo(() => graticuleGeometry(GLOBE_R * 1.001), [])
 
+  const size = useThree((s) => s.size)
+  const menuCam = useMemo(
+    () => new Vector3(0, 2.4, menuDistance(size.height > 0 ? size.width / size.height : 1)),
+    [size.width, size.height],
+  )
+
   // Launch-dive bookkeeping (mutated across frames, no re-renders).
   const started = useRef(false)
   const committed = useRef(false)
@@ -53,7 +66,7 @@ export function IntroScene() {
     if (status === 'menu') {
       g.rotation.y += dt * 0.12
       g.rotation.x = -0.3
-      camera.position.lerp(MENU_CAM, 0.06)
+      camera.position.lerp(menuCam, 0.06)
       camera.lookAt(0, 0.5, 0)
       started.current = false
       committed.current = false

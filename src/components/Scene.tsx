@@ -1,10 +1,12 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber'
-import { Vector3 } from 'three'
+import { PerspectiveCamera } from 'three'
 import { FIELD, COLORS } from '../game/constants'
+import { quality } from '../game/device'
 import { useGameStore } from '../game/useGameStore'
 import { stepShake } from '../game/shake'
 import { unlockAudio, Sfx } from '../game/audio'
+import { CAMERA_FOV, CameraFit, computeCameraFit } from './cameraFit'
 import { ReflectiveFloor } from './ReflectiveFloor'
 import { GridFloor } from './GridFloor'
 import { City } from './City'
@@ -15,32 +17,49 @@ import { ExplosionView } from './Explosion'
 import { ShockwaveView } from './Shockwave'
 import { GameLoop } from './GameLoop'
 
-// Pulled back and tilted down a touch so the grid floor reads as depth, while the
-// missile spawn line (y = FIELD.skyY) stays just inside the top of frame.
-const BASE_CAM = new Vector3(0, 14, 40)
-const LOOK = new Vector3(0, 8.5, 0)
-
-function CameraRig() {
+function CameraRig({ fit }: { fit: CameraFit }) {
   const camera = useThree((s) => s.camera)
+
   useEffect(() => {
-    camera.position.copy(BASE_CAM)
-    camera.lookAt(LOOK)
-  }, [camera])
+    const cam = camera as PerspectiveCamera
+    if (cam.isPerspectiveCamera && cam.fov !== CAMERA_FOV) {
+      cam.fov = CAMERA_FOV
+      cam.updateProjectionMatrix()
+    }
+    camera.position.set(0, fit.cameraY, fit.distance)
+    camera.lookAt(0, fit.lookY, 0)
+  }, [camera, fit])
+
   useFrame((state, dt) => {
     const t = state.clock.elapsedTime
     const energy = stepShake(dt)
     // Continuous slow parallax drift keeps the scene reading as 3D, not a flat picture.
-    const driftX = Math.sin(t * 0.13) * 0.9
-    const driftY = Math.cos(t * 0.19) * 0.35
-    const shakeX = energy > 0 ? (Math.random() - 0.5) * energy : 0
-    const shakeY = energy > 0 ? (Math.random() - 0.5) * energy : 0
-    camera.position.set(BASE_CAM.x + driftX + shakeX, BASE_CAM.y + driftY + shakeY, BASE_CAM.z)
-    camera.lookAt(LOOK)
+    // Scaled by distance so it stays proportional when the camera pulls back to fit
+    // a narrow screen.
+    const amp = fit.distance / 40
+    const driftX = Math.sin(t * 0.13) * 0.9 * amp
+    const driftY = Math.cos(t * 0.19) * 0.35 * amp
+    const shakeX = energy > 0 ? (Math.random() - 0.5) * energy * amp : 0
+    const shakeY = energy > 0 ? (Math.random() - 0.5) * energy * amp : 0
+    camera.position.set(driftX + shakeX, fit.cameraY + driftY + shakeY, fit.distance)
+    camera.lookAt(0, fit.lookY, 0)
   })
   return null
 }
 
-// Full-field invisible plane at z = 0 that captures aim clicks.
+// Mobile stand-in for the reflective floor: the reflection pass re-renders the whole
+// scene to a texture each frame, which a phone GPU cannot afford.
+function PlainFloor({ distance }: { distance: number }) {
+  const extent = Math.max(220, distance * 5)
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -6]}>
+      <planeGeometry args={[extent, extent]} />
+      <meshStandardMaterial color="#080f1e" metalness={0.4} roughness={0.75} />
+    </mesh>
+  )
+}
+
+// Full-field invisible plane at z = 0 that captures aim/tap input.
 function AimPlane() {
   const fireAt = useGameStore((s) => s.fireAt)
   const soundOn = useGameStore((s) => s.soundOn)
@@ -71,19 +90,30 @@ export function Scene() {
   const explosions = useGameStore((s) => s.explosions)
   const shockwaves = useGameStore((s) => s.shockwaves)
 
+  // Re-fit whenever the viewport changes shape (rotation, resize, browser chrome).
+  const size = useThree((s) => s.size)
+  const fit = useMemo(
+    () => computeCameraFit(size.height > 0 ? size.width / size.height : 1),
+    [size.width, size.height],
+  )
+
   return (
     <>
       <color attach="background" args={[COLORS.sky]} />
-      <fog attach="fog" args={[COLORS.sky, 70, 165]} />
+      <fog attach="fog" args={[COLORS.sky, fit.fogNear, fit.fogFar]} />
 
-      <CameraRig />
+      <CameraRig fit={fit} />
       <ambientLight intensity={0.35} />
       <hemisphereLight args={['#33406a', '#0a0d18', 0.5]} />
       <directionalLight position={[10, 30, 20]} intensity={0.6} />
 
       <Starfield />
-      <ReflectiveFloor />
-      <GridFloor />
+      {quality.reflections ? (
+        <ReflectiveFloor distance={fit.distance} />
+      ) : (
+        <PlainFloor distance={fit.distance} />
+      )}
+      <GridFloor distance={fit.distance} />
 
       {cities.map((c) => (
         <City key={c.id} city={c} />

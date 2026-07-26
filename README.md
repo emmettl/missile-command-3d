@@ -43,6 +43,9 @@ npm run build    # type-check + production build
 - Intro globe outlines the **real Earth** — Natural Earth coastlines (`world-atlas`) projected
   onto the sphere as glowing lines; the defended city is pinned to actual land
 - **oxlint** for linting, **vitest** for the game-logic tests — both gated in CI
+- Plays on phones: the camera distance is derived from the viewport so the whole
+  battlefield fits any aspect ratio, and rendering cost (reflections, DPR, particle
+  counts) scales down on touch devices
 
 ## Structure
 

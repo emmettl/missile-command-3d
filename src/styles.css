@@ -36,12 +36,20 @@ body,
   color: #e8eefc;
   -webkit-user-select: none;
   user-select: none;
+  /* Stop iOS rubber-band scroll and double-tap zoom from fighting the canvas. */
+  overscroll-behavior: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
 }
 
 .app {
   position: relative;
-  height: 100vh;
   width: 100vw;
+  height: 100vh;
+  /* Dynamic viewport height: 100vh is wrong on iOS Safari while the address bar
+     is showing, which would push the bottom of the scene off screen. */
+  height: 100dvh;
 }
 
 canvas {
@@ -56,7 +64,9 @@ canvas {
   top: 0;
   left: 0;
   right: 0;
-  padding: 16px 22px;
+  /* Keep clear of the notch / Dynamic Island and the rounded corners. */
+  padding: calc(16px + env(safe-area-inset-top)) calc(22px + env(safe-area-inset-right))
+    16px calc(22px + env(safe-area-inset-left));
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -398,6 +408,38 @@ h1.danger {
   text-shadow: 0 0 10px rgba(125, 255, 155, 0.6);
 }
 
+/* ---------- Rotate hint (portrait phones) ---------- */
+.rotate-hint {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 240, 255, 0.35);
+  background: rgba(10, 14, 26, 0.82);
+  backdrop-filter: blur(6px);
+  color: #cfe6ff;
+  font-family: inherit;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  animation: toastPop 0.4s ease-out;
+}
+
+.rotate-hint-icon {
+  font-size: 15px;
+  color: var(--cyan);
+}
+
+.rotate-hint-x {
+  opacity: 0.5;
+  font-size: 11px;
+}
+
 /* ---------- Transition flash ---------- */
 .flash {
   position: absolute;
@@ -417,5 +459,51 @@ h1.danger {
   }
   100% {
     opacity: 0;
+  }
+}
+
+/* ---------- Small screens / phones ---------- */
+@media (max-width: 700px), (max-height: 480px) {
+  .hud {
+    padding: calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 10px
+      calc(14px + env(safe-area-inset-left));
+  }
+
+  .hud-score {
+    font-size: 24px;
+  }
+
+  .hud-wave {
+    font-size: 14px;
+    letter-spacing: 2px;
+  }
+
+  .city-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .overlay-card {
+    padding: 28px 24px;
+    max-width: 92vw;
+  }
+
+  .intro-legend {
+    gap: 10px;
+    font-size: 10px;
+  }
+
+  /* Comfortable tap targets (Apple's ~44px guidance). */
+  .intro-btn,
+  .btn {
+    font-size: 13px;
+    padding: 16px 28px;
+    min-height: 48px;
+  }
+
+  .hud-sound {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 20px;
   }
 }
