@@ -1,4 +1,5 @@
 import { Canvas } from '@react-three/fiber'
+import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { Scene } from './components/Scene'
 import { IntroScene } from './components/IntroScene'
 import { HUD } from './ui/HUD'
@@ -19,6 +20,14 @@ export default function App() {
         camera={{ position: [0, 2.4, 22], fov: 50, near: 0.1, far: 200 }}
       >
         {inIntro ? <IntroScene /> : <Scene />}
+        <EffectComposer>
+          <Bloom
+            mipmapBlur
+            intensity={0.9}
+            luminanceThreshold={0.25}
+            luminanceSmoothing={0.9}
+          />
+        </EffectComposer>
       </Canvas>
       <HUD />
       <IntroOverlay />

@@ -30,6 +30,12 @@ function freshBatteries(): BatteryState[] {
   return BATTERIES.map((b) => ({ id: b.id, x: b.x, ammo: AMMO_PER_BATTERY, destroyed: false }))
 }
 
+// Guard localStorage so the store is usable under SSR / tests (no `window`).
+const persistentStore: Storage | null =
+  typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+    ? window.localStorage
+    : null
+
 interface GameState {
   status: GameStatus
   score: number
@@ -71,7 +77,7 @@ interface GameState {
 export const useGameStore = create<GameState>()((set, get) => ({
   status: 'menu',
   score: 0,
-  highScore: Number(localStorage.getItem('mc3d-highscore') ?? 0),
+  highScore: Number(persistentStore?.getItem('mc3d-highscore') ?? 0),
   wave: 1,
   soundOn: true,
   bonusCities: 0,
@@ -213,7 +219,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     if (s === 'gameover') {
       const { score, highScore } = get()
       if (score > highScore) {
-        localStorage.setItem('mc3d-highscore', String(score))
+        persistentStore?.setItem('mc3d-highscore', String(score))
         set({ highScore: score })
       }
     }

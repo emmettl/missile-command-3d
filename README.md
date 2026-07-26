@@ -12,6 +12,12 @@ npm run dev
 
 Open http://localhost:5173.
 
+```bash
+npm run lint     # oxlint
+npm test         # vitest (game logic)
+npm run build    # type-check + production build
+```
+
 ## How to play
 
 - **Click anywhere** to fire a counter-missile from your nearest battery.
@@ -29,9 +35,11 @@ Open http://localhost:5173.
 - **React 19 + TypeScript 7**, bundled with **Vite 8** (Rolldown)
 - **@react-three/fiber 9** + **@react-three/drei 10** over **three.js**
 - **zustand 5** for game state; a single `useFrame` loop (`components/GameLoop.tsx`) runs the simulation
+- **Bloom** post-processing (`@react-three/postprocessing`) makes every emissive element glow
 - Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**
 - Intro globe outlines the **real Earth** — Natural Earth coastlines (`world-atlas`) projected
   onto the sphere as glowing lines; the defended city is pinned to actual land
+- **oxlint** for linting, **vitest** for the game-logic tests — both gated in CI
 
 ## Structure
 
