@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#05060f" />
+  <!-- counter-missile trail rising to a detonation -->
+  <path d="M20 54 L36 26" stroke="#38f0ff" stroke-width="4" stroke-linecap="round" opacity="0.9" />
+  <circle cx="38" cy="22" r="9" fill="#ffe14d" />
+  <circle cx="38" cy="22" r="14" fill="#ffe14d" opacity="0.25" />
+  <!-- incoming warhead -->
+  <circle cx="16" cy="14" r="4" fill="#ff5a5a" />
+</svg>
