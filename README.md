@@ -3,6 +3,12 @@
 A 3D take on the arcade classic, built with **React Three Fiber** / **Three.js**.
 Defend six cities from incoming warheads by detonating counter-missiles in their path.
 
+> **Deploying:** pushes to `main` publish to GitHub Pages via
+> [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It needs the repo to be
+> **public** (Pages on private repos requires a paid plan) and **Settings → Pages → Source**
+> set to **GitHub Actions**. The build is served from a subpath, handled by the `BASE_PATH`
+> env var the workflow passes to Vite.
+
 ## Play
 
 ```bash
@@ -36,7 +42,8 @@ npm run build    # type-check + production build
 - **@react-three/fiber 9** + **@react-three/drei 10** over **three.js**
 - **zustand 5** for game state; a single `useFrame` loop (`components/GameLoop.tsx`) runs the simulation
 - **Bloom** post-processing (`@react-three/postprocessing`) makes every emissive element glow
-- Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**
+- Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**,
+  self-hosted (`src/fonts/`, SIL OFL) so the page makes no third-party requests
 - Intro globe outlines the **real Earth** — Natural Earth coastlines (`world-atlas`) projected
   onto the sphere as glowing lines; the defended city is pinned to actual land
 - **oxlint** for linting, **vitest** for the game-logic tests — both gated in CI
