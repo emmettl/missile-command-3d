@@ -3,13 +3,9 @@
 A 3D take on the arcade classic, built with **React Three Fiber** / **Three.js**.
 Defend six cities from incoming warheads by detonating counter-missiles in their path.
 
-> **Deploying:** pushes to `main` publish to GitHub Pages via
-> [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). It needs the repo to be
-> **public** (Pages on private repos requires a paid plan) and **Settings → Pages → Source**
-> set to **GitHub Actions**. The build is served from a subpath, handled by the `BASE_PATH`
-> env var the workflow passes to Vite.
+### ▶ [Play it here](https://emmettl.github.io/missile-command-3d/)
 
-## Play
+## Running it locally
 
 ```bash
 npm install
@@ -63,3 +59,10 @@ src/
 Fast-moving entities (missiles, explosions) store a mutable `THREE.Vector3` position
 that `GameLoop` advances every frame **in place**. React only re-renders the entity
 lists when entities are *added or removed* — movement never triggers a re-render.
+
+## Deployment
+
+Pushes to `main` publish to GitHub Pages via
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), alongside the CI workflow
+(lint · type-check · test · build). The site is served from a `/<repo>/` subpath, so the
+workflow passes `BASE_PATH` to Vite; local dev and previews stay at the root.
