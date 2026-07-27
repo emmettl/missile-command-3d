@@ -64,7 +64,14 @@ surface the bar says so — the one time a strike is worth anything.
 - **React 19 + TypeScript 7**, bundled with **Vite 8** (Rolldown)
 - **@react-three/fiber 9** + **@react-three/drei 10** over **three.js**
 - **zustand 5** for game state; a single `useFrame` loop (`components/GameLoop.tsx`) runs the simulation
-- **Bloom** post-processing (`@react-three/postprocessing`) makes every emissive element glow
+- **Bloom** post-processing (`@react-three/postprocessing`) makes every emissive element glow,
+  over a colour grade (`components/Grade.tsx`) of saturation, a sub-pixel lens offset, grain
+  and a vignette — aiming at a backlit tactical display rather than clean neon on black.
+  The softer half of it drops out on phones, and on any machine the frame-rate monitor has
+  already caught struggling
+- The globe's atmosphere is a **fresnel limb** plus a screen-space spill, its hue drifting
+  slowly between cyan and indigo (`components/Atmosphere.tsx`), so the planet has a lit edge
+  and something to fade into instead of a flat translucent shell
 - Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**,
   self-hosted (`src/fonts/`, SIL OFL) so the page makes no third-party requests — shipped
   twice, as `.woff2` for the stylesheet and `.woff` for the in-scene text, because troika

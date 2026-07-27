@@ -1,8 +1,9 @@
 import { useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { AdditiveBlending, BackSide, Group, Mesh, Vector3 } from 'three'
+import { Group, Mesh, Vector3 } from 'three'
 import { COLORS } from '../game/constants'
 import { getGame } from '../game/useGameStore'
+import { Atmosphere, AtmosphereHalo } from './Atmosphere'
 import { Starfield } from './Starfield'
 import { GlobeExchange } from './GlobeExchange'
 import { coastlineGeometry, graticuleGeometry, latLonDir } from './earth'
@@ -115,6 +116,10 @@ export function IntroScene() {
       <directionalLight position={[8, 10, 12]} intensity={1.1} color="#bcd0ff" />
       <Starfield count={600} />
 
+      {/* The wider spill, outside the globe group so the billboard is never turned by
+          the planet's own rotation. */}
+      <AtmosphereHalo radius={GLOBE_R} />
+
       <group ref={globe}>
         {/* Dark solid core so only the front (near-side) lines read */}
         <mesh>
@@ -129,18 +134,8 @@ export function IntroScene() {
         <lineSegments geometry={coastline}>
           <lineBasicMaterial color={COLORS.player} transparent opacity={0.95} />
         </lineSegments>
-        {/* Atmosphere glow */}
-        <mesh>
-          <sphereGeometry args={[GLOBE_R * 1.14, 48, 48]} />
-          <meshBasicMaterial
-            color={COLORS.player}
-            transparent
-            opacity={0.12}
-            side={BackSide}
-            blending={AdditiveBlending}
-            depthWrite={false}
-          />
-        </mesh>
+        {/* A tight limb hugging the disc. */}
+        <Atmosphere radius={GLOBE_R * 1.035} power={3.4} strength={1.15} />
 
         {/* Exchanges crossing the globe — the war carrying on without you. Inside the
             globe group so they turn with it, and behind the opaque core so the ones on

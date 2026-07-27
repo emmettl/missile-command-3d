@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { Scene } from './components/Scene'
 import { IntroScene } from './components/IntroScene'
 import { AdaptiveRenderScale } from './components/AdaptiveRenderScale'
+import { Grade } from './components/Grade'
 import { HUD } from './ui/HUD'
 import { Overlay } from './ui/Overlay'
 import { IntroOverlay } from './ui/IntroOverlay'
 import { BonusToast, FlashOverlay, SlbmWarning, WaveBanner } from './ui/GameBanners'
 import { WeaponBar } from './ui/WeaponBar'
 import { RotateHint } from './ui/RotateHint'
-import { isMobile, quality } from './game/device'
+import { isMobile } from './game/device'
 import { START_FACTOR } from './game/renderScale'
 import { useRenderDpr } from './game/useRenderDpr'
 import { useGameStore } from './game/useGameStore'
@@ -34,14 +34,7 @@ export default function App() {
       >
         {inIntro ? <IntroScene /> : <Scene />}
         <AdaptiveRenderScale onFactor={setFactor} />
-        <EffectComposer>
-          <Bloom
-            mipmapBlur
-            intensity={quality.bloomIntensity}
-            luminanceThreshold={0.25}
-            luminanceSmoothing={0.9}
-          />
-        </EffectComposer>
+        <Grade factor={factor} />
       </Canvas>
       <HUD />
       <WeaponBar />
