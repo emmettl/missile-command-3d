@@ -32,12 +32,11 @@ const v = () => new Vector3()
 
 describe('modeForWave', () => {
   it('opens classic and turns the war offshore every third wave from the third', () => {
-    const modes = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(modeForWave)
-    expect(modes).toEqual([
+    // Wave 5 is the gun's slot; the full rotation is pinned in bombers.test.ts.
+    expect([1, 2, 3, 4, 6, 7, 8, 9].map(modeForWave)).toEqual([
       'classic',
       'classic',
       'slbm',
-      'classic',
       'classic',
       'slbm',
       'classic',

@@ -10,6 +10,8 @@ import {
   coastPath,
   contourPaths,
   islandPaths,
+  landStrip,
+  stripIndices,
 } from './coastline'
 
 describe('coastline', () => {
@@ -102,6 +104,37 @@ describe('coastline', () => {
       for (let i = 0; i < alphas.length; i++) {
         expect(positions[i * 3]).toBeGreaterThan(SEA.minX)
       }
+    })
+  })
+
+  describe('filled strips', () => {
+    // Both fills are drawn with the default FrontSide material and looked at from above,
+    // so a strip wound the wrong way is not a subtly wrong shade — it is invisible, from
+    // every camera, in every mode. The land was exactly that for as long as it existed:
+    // it read as "the land is drawn dark" until the sea grid started showing through it.
+    const upwardNormals = (verts: Float32Array) => {
+      const index = stripIndices(verts.length / 3)
+      const at = (i: number) => [verts[i * 3], verts[i * 3 + 1], verts[i * 3 + 2]] as const
+      let up = 0
+      for (let t = 0; t < index.length; t += 3) {
+        const [a, b, c] = [at(index[t]), at(index[t + 1]), at(index[t + 2])]
+        const u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]]
+        const v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]]
+        // y component of u x v; positive is a face you can see from above.
+        if (u[2] * v[0] - u[0] * v[2] > 0) up++
+      }
+      return { up, total: index.length / 3 }
+    }
+
+    it('faces the land up, or it is culled and the grid runs over it', () => {
+      const { up, total } = upwardNormals(landStrip(shore))
+      expect(total).toBeGreaterThan(100)
+      expect(up).toBe(total)
+    })
+
+    it('faces the coastal glow up too', () => {
+      const { up, total } = upwardNormals(coastGlowStrip(shore).positions)
+      expect(up).toBe(total)
     })
   })
 

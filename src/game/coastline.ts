@@ -13,8 +13,14 @@ import { FIELD, SEA } from './constants'
 export const SHORE_X = -31
 /** How far the shore wanders either side of that. Bounded, and the bounds are tested: */
 export const SHORE_WANDER = 4.5
-/** Far enough along z to run past the edge of frame at any aspect ratio. */
-export const SHORE_HALF_LENGTH = 230
+/**
+ * Far enough along z to run past the edge of frame at any aspect ratio — and a portrait
+ * phone is the demanding case, not the forgiving one: a narrow aspect pushes the camera
+ * a long way back to fit the theatre's width, which brings far more of the coast's
+ * length into view. At 230 the shore and the land it encloses simply stopped, and the
+ * sea grid carried on past the end of the world.
+ */
+export const SHORE_HALF_LENGTH = 460
 const SHORE_STEP = 2.4 // metres between vertices
 const SHORE_PERIOD = 46 // metres per unit of noise; bay-to-bay distance
 
@@ -151,19 +157,34 @@ export function coastGlowStrip(shore: CoastPoint[] = coastPath()): {
   return { positions, alphas }
 }
 
+/** Indices that wind a two-row vertex strip (a, b, a, b …) into a continuous band. */
+export function stripIndices(vertexCount: number): number[] {
+  const index: number[] = []
+  for (let i = 0; i + 3 < vertexCount; i += 2) index.push(i, i + 1, i + 2, i + 1, i + 3, i + 2)
+  return index
+}
+
 /**
  * The land as a triangle strip: the shore on one edge, off the back of the map on the
  * other. Filling it is what makes the outline read as a coast rather than as a line
  * drawn on the sea — the grid stops at the water's edge.
+ *
+ * The inland edge comes first in each pair, and that ordering is the whole reason this
+ * is drawn at all. `stripIndices` winds a strip one way; whether the resulting triangles
+ * face up or down depends on which side of the pair steps towards +x. The glow strip runs
+ * seaward, so listing the shore first faces it up — and the land, running the other way,
+ * came out facing *down* and was back-face culled from every camera in the game. It looked
+ * for all the world like the land was simply drawn dark, right up until the grid started
+ * showing through it. `coastline.test.ts` now holds both strips to facing up.
  */
 export function landStrip(shore: CoastPoint[] = coastPath()): Float32Array {
   const verts = new Float32Array(shore.length * 2 * 3)
   let i = 0
   for (const p of shore) {
-    verts[i++] = p.x
+    verts[i++] = LAND_FAR_X
     verts[i++] = 0
     verts[i++] = p.z
-    verts[i++] = LAND_FAR_X
+    verts[i++] = p.x
     verts[i++] = 0
     verts[i++] = p.z
   }

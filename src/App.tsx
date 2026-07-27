@@ -9,6 +9,7 @@ import { Overlay } from './ui/Overlay'
 import { IntroOverlay } from './ui/IntroOverlay'
 import { BonusToast, FlashOverlay, SlbmWarning, WaveBanner } from './ui/GameBanners'
 import { WeaponBar } from './ui/WeaponBar'
+import { GunHUD } from './ui/GunHUD'
 import { RotateHint } from './ui/RotateHint'
 import { isMobile } from './game/device'
 import { START_FACTOR } from './game/renderScale'
@@ -30,7 +31,12 @@ export default function App() {
       <Canvas
         dpr={dpr}
         gl={{ antialias: !isMobile, powerPreference: 'high-performance' }}
-        camera={{ position: [0, 2.4, 22], fov: 50, near: 0.1, far: 600 }}
+        // Depth precision is dominated by the near plane, and the flat chart layers in
+        // an SLBM wave are stacked within a fraction of a unit of each other at ~150
+        // units out. 0.1 left them inside the buffer's noise on a phone; nothing in any
+        // mode comes within half a unit of the camera, so this costs nothing and buys a
+        // five-fold improvement.
+        camera={{ position: [0, 2.4, 22], fov: 50, near: 0.5, far: 600 }}
       >
         {inIntro ? <IntroScene /> : <Scene />}
         <AdaptiveRenderScale onFactor={setFactor} />
@@ -38,6 +44,7 @@ export default function App() {
       </Canvas>
       <HUD />
       <WeaponBar />
+      <GunHUD />
       <IntroOverlay />
       <Overlay />
       <WaveBanner />

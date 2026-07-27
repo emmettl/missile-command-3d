@@ -35,6 +35,24 @@ npm run build    # type-check + production build
   (magenta, wave 3+) that dodge your blasts and must be hit directly.
 - Protect your cities. Batteries reload each wave; unused ammo and surviving cities score bonuses.
 
+### BOMBERS INCOMING
+
+Every fifth wave from the fifth, you climb into the pit and man the gun yourself — a
+first-person wave where the whole difficulty is that you can only face one way.
+
+- Formations come over at altitude on **varied bearings**, never twice from the same
+  quarter, release their sticks and carry on out the other side.
+- Bombs fall **ballistically** and can miss: the release point is solved from the fall
+  time, so an un-engaged bomber destroys what it was aimed at and one knocked off its
+  line digs a hole in the dirt.
+- The gun fires **tracers with travel time**, so you lead the target, and bursts near
+  whatever it passes — a near miss counts. It runs on **heat, not ammunition**: hold the
+  trigger too long and it locks out until it has cooled well below the limit.
+- A **bearing strip** shows contacts around you — which way to turn, and nothing else.
+  Filled blips are ahead of you, hollow ones behind.
+- Mouse to traverse (it takes the pointer lock), hold to fire. After the mode's first
+  outing, `1` / `2` / `3` move you between emplacements.
+
 ### SLBM ATTACK
 
 Every third wave from the third, the war moves offshore and the camera swings round to an
@@ -105,10 +123,11 @@ surface the bar says so — the one time a strike is worth anything.
 ```
 src/
   game/        constants, types, zustand store, incoming (MIRV/dodge), slbm (arcs/subs),
-               renderScale, audio, shake
+               bombers + gun (first-person wave), renderScale, audio, shake
   components/   IntroScene (globe dive), Scene, GameLoop, GridFloor, ReflectiveFloor,
-                City, Battery, Submarine, Missiles, Explosion, Shockwave, Starfield, Trail
-  ui/           HUD, WeaponBar, IntroOverlay, Overlay, GameBanners (wave/bonus/flash)
+                City, Battery, Submarine, Bombers, GunRig, Missiles, Explosion,
+                Shockwave, Starfield, Trail
+  ui/           HUD, WeaponBar, GunHUD, IntroOverlay, Overlay, GameBanners
 ```
 
 ## Architecture note

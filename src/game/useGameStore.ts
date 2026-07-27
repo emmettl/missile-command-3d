@@ -12,16 +12,24 @@ import {
   SCORE_PER_AMMO_BONUS,
   SCORE_PER_CITY_BONUS,
   SUB_KILL_SCORE,
+  SCORE_PER_BOMB,
+  SCORE_PER_BOMBER,
   SUB_STRIKE_ROUNDS,
   SUB_STRIKE_SPEED,
+  bomberFlightsForWave,
   modeForWave,
   slbmCountForWave,
   subCountForWave,
 } from './constants'
 import { makeArc, newSubmarine, salvoRemaining } from './slbm'
+import { newGun } from './gun'
 import type {
   BatteryState,
   BlastKind,
+  Bomb,
+  Bomber,
+  GunState,
+  Shell,
   CityState,
   Explosion,
   GameStatus,
@@ -82,6 +90,16 @@ interface GameState {
   /** Boats currently on the surface — drives the "there is something to shoot" prompt. */
   subsExposed: number
 
+  // BOMBERS INCOMING
+  bombers: Bomber[]
+  bombs: Bomb[]
+  shells: Shell[]
+  gun: GunState
+  /** Whether the trigger is held. The loop turns this into rounds at the gun's cadence. */
+  firing: boolean
+  /** Flights still to come this wave. */
+  flightsLeft: number
+
   // wave spawn bookkeeping (managed by the game loop)
   toSpawn: number
   spawnedThisWave: number
@@ -94,6 +112,10 @@ interface GameState {
   fireAt: (x: number, y: number) => boolean
   fireStrike: (x: number, z: number) => boolean
   setWeapon: (w: WeaponKind) => void
+  setFiring: (firing: boolean) => void
+  manPosition: (index: number) => void
+  killBomber: (id: number) => void
+  killBomb: (id: number) => void
   addIncoming: (m: IncomingMissile) => void
   addExplosion: (pos: Vector3, kind?: BlastKind) => void
   addShockwave: (pos: Vector3) => void
@@ -153,6 +175,13 @@ export const useGameStore = create<GameState>()((set, get) => ({
   weaponsUsed: ['interceptor'],
   subsExposed: 0,
 
+  bombers: [],
+  bombs: [],
+  shells: [],
+  gun: newGun(),
+  firing: false,
+  flightsLeft: 0,
+
   toSpawn: 0,
   spawnedThisWave: 0,
   spawnTimer: 0,
@@ -172,6 +201,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
       explosions: [],
       shockwaves: [],
       submarines: [],
+      bombers: [],
+      bombs: [],
+      shells: [],
       waveMode: 'classic',
       weapon: 'interceptor',
     })
@@ -196,6 +228,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     // deliver fewer warheads but on long, slow, high arcs.
     const mode = modeForWave(wave)
     const subCount = mode === 'slbm' ? subCountForWave(wave) : 0
+    const flights = mode === 'bombers' ? bomberFlightsForWave(wave) : 0
     set({
       status: 'playing',
       wave,
@@ -213,7 +246,19 @@ export const useGameStore = create<GameState>()((set, get) => ({
       flakRounds: mode === 'slbm' ? FLAK_ROUNDS : 0,
       strikeRounds: mode === 'slbm' ? SUB_STRIKE_ROUNDS : 0,
       subsExposed: 0,
-      toSpawn: mode === 'slbm' ? slbmCountForWave(wave) : 8 + wave * 2,
+      // The gun is manned from the centre emplacement; a later wave lets you move.
+      bombers: [],
+      bombs: [],
+      shells: [],
+      gun: newGun(1),
+      firing: false,
+      flightsLeft: flights,
+      toSpawn:
+        mode === 'slbm'
+          ? slbmCountForWave(wave)
+          : mode === 'bombers'
+            ? flights * 3
+            : 8 + wave * 2,
       spawnedThisWave: 0,
       spawnTimer: 1.0, // small breather before the first missile
     })
@@ -294,6 +339,32 @@ export const useGameStore = create<GameState>()((set, get) => ({
     set({ weapon: w })
   },
 
+  setFiring: (firing) => set({ firing }),
+
+  /** Move to another emplacement. A destroyed one cannot be manned. */
+  manPosition: (index) => {
+    const { batteries, gun, waveMode } = get()
+    if (waveMode !== 'bombers') return
+    const battery = batteries[index]
+    if (!battery || battery.destroyed) return
+    gun.position = index
+    set({ gun: { ...gun } })
+  },
+
+  killBomber: (id) => {
+    const bomber = get().bombers.find((b) => b.id === id)
+    if (!bomber || !bomber.alive) return
+    bomber.alive = false
+    get().addScore(SCORE_PER_BOMBER)
+  },
+
+  killBomb: (id) => {
+    const bomb = get().bombs.find((b) => b.id === id)
+    if (!bomb || !bomb.alive) return
+    bomb.alive = false
+    get().addScore(SCORE_PER_BOMB)
+  },
+
   addIncoming: (m) => set({ incoming: [...get().incoming, m] }),
 
   addExplosion: (pos: Vector3, kind: BlastKind = 'blast') => {
@@ -344,6 +415,9 @@ export const useGameStore = create<GameState>()((set, get) => ({
       players: get().players.filter((m) => m.alive),
       explosions: get().explosions.filter((e) => !e.dead),
       shockwaves: get().shockwaves.filter((s) => !s.dead),
+      bombers: get().bombers.filter((b) => b.alive),
+      bombs: get().bombs.filter((b) => b.alive),
+      shells: get().shells.filter((s) => s.alive),
     })
   },
 

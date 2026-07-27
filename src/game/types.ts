@@ -21,7 +21,7 @@ export interface BatteryState {
 
 export type IncomingKind = 'normal' | 'mirv' | 'smart' | 'slbm'
 
-export type WaveMode = 'classic' | 'slbm'
+export type WaveMode = 'classic' | 'slbm' | 'bombers'
 
 /** Player weapons. Only the interceptor exists in a classic wave. */
 export type WeaponKind = 'interceptor' | 'flak' | 'strike'
@@ -72,6 +72,62 @@ export interface Explosion {
   radius: number // current radius, updated each frame
   dead: boolean
   kind: BlastKind // flak hangs at radius far longer than a counter-missile blast
+}
+
+// --- BOMBERS INCOMING ---------------------------------------------------------------
+
+/**
+ * A bomber on a run. It flies a straight line at a fixed altitude towards the city it
+ * has been assigned, releases when the ballistics say the bombs will land on it, and
+ * carries on out the other side.
+ */
+export interface Bomber {
+  id: number
+  pos: Vector3
+  /** Unit vector in the ground plane; altitude does not change during a run. */
+  heading: Vector3
+  speed: number
+  hp: number
+  alive: boolean
+  bombsLeft: number
+  /** Seconds until the next bomb of a stick, once the first has gone. */
+  stickTimer: number
+  released: boolean
+  targetId: string
+  /** Where the target is, so the release point can be judged against it. */
+  targetX: number
+}
+
+/** A bomb, once released: pure ballistics, and it can miss. */
+export interface Bomb {
+  id: number
+  pos: Vector3
+  vel: Vector3
+  alive: boolean
+  targetId: string
+}
+
+/** One round from the gun. Flies straight — leading the target is enough to ask. */
+export interface Shell {
+  id: number
+  pos: Vector3
+  vel: Vector3
+  age: number
+  alive: boolean
+}
+
+/** The gun you are stood behind. */
+export interface GunState {
+  /** 0 cold, 1 at the limit. */
+  heat: number
+  /** True while it is locked out and cooling. */
+  jammed: boolean
+  /** Seconds until the next round may leave the barrel. */
+  cadence: number
+  /** Index into BATTERIES — the emplacement being manned. */
+  position: number
+  yaw: number
+  pitch: number
 }
 
 export type SubPhase = 'submerged' | 'surfacing' | 'firing' | 'diving'
