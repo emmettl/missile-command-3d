@@ -23,6 +23,12 @@ export const quality = {
   reflections: !isMobile,
   // The device pixel ratio is capped too, but it depends on the current window size
   // rather than the device alone — see renderScale.ts / useRenderDpr.ts.
+  /**
+   * The softer half of the colour grade — grain and the lens bleed. Cheap per pixel, but
+   * they are extra full-screen work for the least visible part of the look, so phones
+   * keep the vignette and the saturation and skip these.
+   */
+  richGrade: !isMobile,
   starCount: isMobile ? 220 : 600,
   bloomIntensity: isMobile ? 0.7 : 0.9,
   /** Sparks are cheap, but fewer of them keeps overdraw down on tiled GPUs. */

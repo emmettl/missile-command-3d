@@ -79,6 +79,12 @@ export const Sfx = {
     tone({ freq: 90, toFreq: 1300, duration: 1.9, type: 'sawtooth', gain: 0.12 })
     tone({ freq: 140, toFreq: 900, duration: 1.9, type: 'sine', gain: 0.1 })
   },
+  // Two-tone klaxon for the SLBM warning — falling, then falling again, so it reads as
+  // an alarm rather than as a reward.
+  alarm: () => {
+    tone({ freq: 520, toFreq: 330, duration: 0.5, type: 'square', gain: 0.11 })
+    setTimeout(() => tone({ freq: 520, toFreq: 330, duration: 0.5, type: 'square', gain: 0.11 }), 560)
+  },
   bonus: () => {
     tone({ freq: 660, duration: 0.12, type: 'triangle', gain: 0.14 })
     setTimeout(() => tone({ freq: 990, duration: 0.18, type: 'triangle', gain: 0.14 }), 110)

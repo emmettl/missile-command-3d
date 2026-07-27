@@ -1,6 +1,41 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../game/useGameStore'
+import { slbmWarningDue } from '../game/constants'
 import { Sfx } from '../game/audio'
+
+// Red standing warning through the tail of the wave before an SLBM attack, so the mode
+// change is something you see coming rather than something that happens to you.
+export function SlbmWarning() {
+  const wave = useGameStore((s) => s.wave)
+  const status = useGameStore((s) => s.status)
+  const toSpawn = useGameStore((s) => s.toSpawn)
+  const spawned = useGameStore((s) => s.spawnedThisWave)
+  const soundOn = useGameStore((s) => s.soundOn)
+
+  const due = slbmWarningDue(wave, spawned, toSpawn) && (status === 'playing' || status === 'wave-clear')
+  const sounded = useRef(false)
+
+  useEffect(() => {
+    if (!due) {
+      sounded.current = false
+      return
+    }
+    if (!sounded.current) {
+      sounded.current = true
+      if (soundOn) Sfx.alarm()
+    }
+  }, [due, soundOn])
+
+  if (!due) return null
+  return (
+    <div className="slbm-warning">
+      {/* Marked out with glyphs the pixel face actually carries — a warning sign falls
+          back to the system font and lands somewhere off to the left of the line. */}
+      <div className="sw-title">&gt;&gt; SLBM ATTACK INCOMING &lt;&lt;</div>
+      <div className="sw-sub">SUBMARINE CONTACT — WAVE {wave + 1}</div>
+    </div>
+  )
+}
 
 // "WAVE N — M INCOMING" card shown briefly at the start of each wave, or the mode's own
 // callsign when the war moves offshore.
@@ -30,7 +65,7 @@ export function WaveBanner() {
         <div className="wb-count">
           WAVE {wave} — {subs} {subs === 1 ? 'BOAT' : 'BOATS'} ON SONAR
         </div>
-        <div className="wb-note">SURFACED BOATS CAN BE SUNK</div>
+        <div className="wb-note">1 INTERCEPT · 2 FLAK · 3 STRIKE</div>
       </div>
     )
   }

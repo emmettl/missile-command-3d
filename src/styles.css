@@ -214,6 +214,12 @@ h1.danger {
   letter-spacing: 1px;
 }
 
+.muted.faint {
+  opacity: 0.32;
+  font-size: 11px;
+  margin-top: 14px;
+}
+
 .rules {
   line-height: 1.6;
   margin: 18px 0 14px;
@@ -378,12 +384,87 @@ h1.danger {
   opacity: 0.85;
 }
 
+/* ---------- SLBM incoming warning (the wave before) ---------- */
+.slbm-warning {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  text-align: center;
+  pointer-events: none;
+  animation: warnIn 0.35s ease-out;
+}
+
+.sw-title {
+  font-family: var(--pixel);
+  font-size: clamp(12px, 2.1vw, 22px);
+  color: var(--red);
+  letter-spacing: 3px;
+  text-shadow: 0 0 18px rgba(255, 90, 90, 0.75);
+  animation: warnPulse 1.15s ease-in-out infinite;
+}
+
+.sw-sub {
+  font-family: var(--pixel);
+  font-size: clamp(8px, 1.1vw, 11px);
+  color: #ffb0b0;
+  margin-top: 9px;
+  letter-spacing: 2px;
+  opacity: 0.8;
+}
+
+@keyframes warnPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes warnIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Users who would rather not have things flashing at them get a steady warning. */
+@media (prefers-reduced-motion: reduce) {
+  .sw-title {
+    animation: none;
+  }
+  .slbm-warning {
+    animation: none;
+  }
+}
+
 /* ---------- Weapon selector (SLBM waves) ---------- */
-.weapon-bar {
+.weapon-dock {
   position: absolute;
   left: 0;
   right: 0;
   bottom: calc(18px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.weapon-prompt {
+  font-family: var(--pixel);
+  font-size: clamp(8px, 1.2vw, 12px);
+  color: #ffd166;
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  text-shadow: 0 0 14px rgba(255, 209, 102, 0.55);
+  animation: promptPulse 1.4s ease-in-out infinite;
+}
+
+.weapon-bar {
   display: flex;
   justify-content: center;
   gap: 10px;
@@ -419,6 +500,56 @@ h1.danger {
 .weapon.spent {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+/* Never fired: keeps drawing the eye until the player has tried it once. */
+.weapon.untried {
+  position: relative;
+  border-color: rgba(255, 209, 102, 0.85);
+  color: #ffe6ad;
+  animation: untriedPulse 1.6s ease-in-out infinite;
+}
+
+.weapon.untried.on {
+  animation: none;
+}
+
+.weapon-new {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffd166;
+  box-shadow: 0 0 8px #ffd166;
+}
+
+@keyframes untriedPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(255, 209, 102, 0);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(255, 209, 102, 0.55);
+  }
+}
+
+@keyframes promptPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weapon.untried,
+  .weapon-prompt {
+    animation: none;
+  }
 }
 
 .weapon-key {

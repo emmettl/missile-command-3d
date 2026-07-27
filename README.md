@@ -24,6 +24,9 @@ npm run build    # type-check + production build
 
 - **Click anywhere** to fire a counter-missile from your nearest battery.
 - Press **START** on the globe intro — the camera dives into your city and the battle begins.
+  Leave it alone and the globe keeps turning under a nuclear exchange tracing great circles
+  between real cities, each launch in its bloc's colours and never aimed at its own side;
+  a finished game returns here on its own.
 - The missile flies to the click point and detonates into an expanding blast.
 - Any incoming warhead caught in a blast is destroyed — blasts chain-react.
 - Watch for **MIRVs** (orange, wave 2+) that split into several warheads, and **smart bombs**
@@ -36,8 +39,17 @@ Every third wave from the third, the war moves offshore and the camera swings ro
 oblique view of the ocean — the coast compressed against the right of the screen, open
 water receding away to the left.
 
+- The tail of the wave before carries a red **SLBM ATTACK INCOMING** warning, so the mode
+  change is something you see coming rather than something that happens to you.
+- The water is charted: a lit sea, dark land, and a **vector coastline** between them with
+  its light bleeding out into the water — plus depth contours and islands. All generated
+  procedurally but deterministically (`game/coastline.ts`), so the shore is in the same
+  place every wave and every session.
 - Missile submarines hold station out at sea, hidden except for a **sonar return** on the
-  water. They surface to fire, launching warheads on long, high **ballistic arcs**.
+  water. They surface to fire, launching warheads on long, high **ballistic arcs** — slow
+  enough to watch, since the difficulty is meant to be judging where one will be rather
+  than noticing it at all. `game/slbmPacing.test.ts` simulates a whole wave and holds that
+  pacing to account: how long the wave runs, and how long each warhead is in the air.
 - A surfaced boat is the only killable one, and only for the few seconds it is up.
 - **1 INTERCEPT** — your counter-missile lobs out here, so you have to aim where the
   warhead is *going*, not where it is.
@@ -45,6 +57,10 @@ water receding away to the left.
   it. Good for fencing off a corridor; smart bombs steer around it.
 - **3 STRIKE** — thrown at a point on the water rather than the sky. Sinks a surfaced boat,
   and takes the rest of its salvo out of the wave with it.
+
+The bar sits at the edge of vision while the fight is in the middle of the screen, so a
+weapon you have never fired keeps advertising itself, and the moment a boat breaks the
+surface the bar says so — the one time a strike is worth anything.
 - Every 3,000 points earns a **reserve city** that rebuilds a destroyed one at the next wave.
 - The game ends when all cities — or all batteries — are gone.
 
@@ -53,7 +69,14 @@ water receding away to the left.
 - **React 19 + TypeScript 7**, bundled with **Vite 8** (Rolldown)
 - **@react-three/fiber 9** + **@react-three/drei 10** over **three.js**
 - **zustand 5** for game state; a single `useFrame` loop (`components/GameLoop.tsx`) runs the simulation
-- **Bloom** post-processing (`@react-three/postprocessing`) makes every emissive element glow
+- **Bloom** post-processing (`@react-three/postprocessing`) makes every emissive element glow,
+  over a colour grade (`components/Grade.tsx`) of saturation, a sub-pixel lens offset, grain
+  and a vignette — aiming at a backlit tactical display rather than clean neon on black.
+  The softer half of it drops out on phones, and on any machine the frame-rate monitor has
+  already caught struggling
+- The globe's atmosphere is a **fresnel limb** plus a screen-space spill, its hue drifting
+  slowly between cyan and indigo (`components/Atmosphere.tsx`), so the planet has a lit edge
+  and something to fade into instead of a flat translucent shell
 - Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**,
   self-hosted (`src/fonts/`, SIL OFL) so the page makes no third-party requests — shipped
   twice, as `.woff2` for the stylesheet and `.woff` for the in-scene text, because troika
