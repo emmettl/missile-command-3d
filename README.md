@@ -40,9 +40,10 @@ water receding away to the left.
 
 - The tail of the wave before carries a red **SLBM ATTACK INCOMING** warning, so the mode
   change is something you see coming rather than something that happens to you.
-- The water is charted: a **vector coastline** with depth contours and islands, generated
+- The water is charted: a lit sea, dark land, and a **vector coastline** between them with
+  its light bleeding out into the water — plus depth contours and islands. All generated
   procedurally but deterministically (`game/coastline.ts`), so the shore is in the same
-  place every wave and every session. Land is filled, sea keeps the grid.
+  place every wave and every session.
 - Missile submarines hold station out at sea, hidden except for a **sonar return** on the
   water. They surface to fire, launching warheads on long, high **ballistic arcs**.
 - A surfaced boat is the only killable one, and only for the few seconds it is up.

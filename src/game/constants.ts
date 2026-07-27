@@ -183,9 +183,11 @@ export function slbmCountForWave(wave: number): number {
 
 // Palette
 export const COLORS = {
-  coast: '#57c8a8',
-  land: '#050b14',
-  contour: '#2f7d8a',
+  coast: '#7fe9ff',
+  coastGlow: '#2f7fd0',
+  land: '#0b1024',
+  sea: '#123566',
+  contour: '#4a9fd6',
   sub: '#8fe0d0',
   subHull: '#16323c',
   subPing: '#2f7d74',

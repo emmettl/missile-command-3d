@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { BATTERIES, SEA } from './constants'
 import {
   CONTOUR_OFFSETS,
+  GLOW_WIDTH,
+  coastGlowStrip,
   SHORE_HALF_LENGTH,
   SHORE_WANDER,
   SHORE_X,
@@ -70,6 +72,36 @@ describe('coastline', () => {
       const offsets = first.map((p, i) => p.x - shore[i].x)
       const spread = Math.max(...offsets) - Math.min(...offsets)
       expect(spread).toBeGreaterThan(2)
+    })
+  })
+
+  describe('coastal glow', () => {
+    const { positions, alphas } = coastGlowStrip(shore)
+
+    it('runs seaward from the shore and fades out', () => {
+      expect(alphas.length).toBe(shore.length * 2)
+      for (let i = 0; i < shore.length; i++) {
+        const inner = i * 2
+        const outer = inner + 1
+        expect(alphas[inner]).toBe(1) // lit against the coast
+        expect(alphas[outer]).toBe(0) // nothing at the outer edge
+        // Seaward, meaning -x, and exactly the band width.
+        expect(positions[outer * 3]).toBeCloseTo(positions[inner * 3] - GLOW_WIDTH)
+        expect(positions[outer * 3 + 2]).toBeCloseTo(positions[inner * 3 + 2])
+      }
+    })
+
+    it('hugs the shore rather than a straight line beside it', () => {
+      const innerXs = shore.map((_, i) => positions[i * 2 * 3])
+      expect(Math.max(...innerXs) - Math.min(...innerXs)).toBeGreaterThan(1)
+      // Same line, to within what a Float32Array can hold.
+      innerXs.forEach((x, i) => expect(x).toBeCloseTo(shore[i].x, 4))
+    })
+
+    it('never reaches the water the boats work in', () => {
+      for (let i = 0; i < alphas.length; i++) {
+        expect(positions[i * 3]).toBeGreaterThan(SEA.minX)
+      }
     })
   })
 

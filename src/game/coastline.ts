@@ -119,6 +119,38 @@ export const SHORE_LANDWARD_LIMIT = FIELD.minX
 /** Far enough inland to run off the back of the frame. */
 export const LAND_FAR_X = 260
 
+/** How far the coastal glow bleeds out into the water. */
+export const GLOW_WIDTH = 15
+
+/**
+ * A band of light running seaward from the shore, as a triangle strip with a companion
+ * alpha per vertex: opaque along the coast, nothing at the outer edge.
+ *
+ * This is the thing that makes a chart of this kind read the way it does. The outline on
+ * its own is a hard line between two flat fills; the light bleeding off it into the
+ * water is what gives the coast a glow to sit in, and the water something to be lit by.
+ */
+export function coastGlowStrip(shore: CoastPoint[] = coastPath()): {
+  positions: Float32Array
+  alphas: Float32Array
+} {
+  const positions = new Float32Array(shore.length * 2 * 3)
+  const alphas = new Float32Array(shore.length * 2)
+  let i = 0
+  let a = 0
+  for (const p of shore) {
+    positions[i++] = p.x
+    positions[i++] = 0
+    positions[i++] = p.z
+    alphas[a++] = 1
+    positions[i++] = p.x - GLOW_WIDTH
+    positions[i++] = 0
+    positions[i++] = p.z
+    alphas[a++] = 0
+  }
+  return { positions, alphas }
+}
+
 /**
  * The land as a triangle strip: the shore on one edge, off the back of the map on the
  * other. Filling it is what makes the outline read as a coast rather than as a line
