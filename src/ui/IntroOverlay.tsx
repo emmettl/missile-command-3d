@@ -42,6 +42,8 @@ export function IntroOverlay() {
       <button className="btn intro-btn" onClick={start} disabled={leaving}>
         {leaving ? 'LAUNCHING…' : 'START'}
       </button>
+      {/* The globe is draggable, which is not something anyone tries unprompted. */}
+      {!leaving && <div className="intro-drag">DRAG THE GLOBE TO TURN IT</div>}
       {highScore > 0 && <div className="muted intro-hi">HI {highScore.toLocaleString()}</div>}
     </div>
   )

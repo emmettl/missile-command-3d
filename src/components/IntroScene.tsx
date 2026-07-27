@@ -1,8 +1,9 @@
-import { useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Group, Mesh, Vector3 } from 'three'
 import { COLORS } from '../game/constants'
 import { getGame } from '../game/useGameStore'
+import { dragBy, newSpin, setFlick, settle } from './globeSpin'
 import { Atmosphere, AtmosphereHalo } from './Atmosphere'
 import { Starfield } from './Starfield'
 import { GlobeExchange } from './GlobeExchange'
@@ -49,6 +50,49 @@ export function IntroScene() {
     [size.width, size.height],
   )
 
+  // Hand-turning the globe. The pointer is taken straight off the canvas rather than
+  // through a mesh, so the whole screen is a handle — and the DOM title card sits above
+  // the canvas, so the START button still takes its own clicks.
+  const gl = useThree((s) => s.gl)
+  const spin = useRef(newSpin())
+  const dragging = useRef(false)
+  const lastPointer = useRef({ x: 0, y: 0 })
+  const draggedYaw = useRef(0)
+
+  useEffect(() => {
+    const el = gl.domElement
+    const down = (e: PointerEvent) => {
+      if (getGame().status !== 'menu') return // the dive is not interruptible
+      dragging.current = true
+      lastPointer.current = { x: e.clientX, y: e.clientY }
+      el.setPointerCapture(e.pointerId)
+    }
+    const move = (e: PointerEvent) => {
+      if (!dragging.current) return
+      draggedYaw.current += dragBy(
+        spin.current,
+        e.clientX - lastPointer.current.x,
+        e.clientY - lastPointer.current.y,
+      )
+      lastPointer.current = { x: e.clientX, y: e.clientY }
+    }
+    const up = (e: PointerEvent) => {
+      dragging.current = false
+      if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId)
+    }
+    el.addEventListener('pointerdown', down)
+    el.addEventListener('pointermove', move)
+    el.addEventListener('pointerup', up)
+    el.addEventListener('pointercancel', up)
+    return () => {
+      el.removeEventListener('pointerdown', down)
+      el.removeEventListener('pointermove', move)
+      el.removeEventListener('pointerup', up)
+      el.removeEventListener('pointercancel', up)
+      dragging.current = false
+    }
+  }, [gl])
+
   // Launch-dive bookkeeping (mutated across frames, no re-renders).
   const started = useRef(false)
   const committed = useRef(false)
@@ -66,8 +110,17 @@ export function IntroScene() {
     if (!g) return
 
     if (status === 'menu') {
-      g.rotation.y += dt * 0.12
-      g.rotation.x = -0.3
+      // Under the hand while it is being dragged; drifting, with whatever is left of the
+      // last flick, once it is let go.
+      if (dragging.current) {
+        g.rotation.y += draggedYaw.current
+        setFlick(spin.current, draggedYaw.current, dt)
+      } else {
+        g.rotation.y += settle(spin.current, dt)
+      }
+      draggedYaw.current = 0
+      g.rotation.x = spin.current.tilt
+
       camera.position.lerp(menuCam, 0.06)
       camera.lookAt(0, 0.5, 0)
       started.current = false
@@ -75,6 +128,9 @@ export function IntroScene() {
       progress.current = 0
       return
     }
+
+    // Anything dragged in during the dive is discarded rather than banked.
+    draggedYaw.current = 0
 
     if (status !== 'launching') return
 
