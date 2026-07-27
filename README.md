@@ -26,7 +26,9 @@ npm run build    # type-check + production build
 - Press **START** on the globe intro — the camera dives into your city and the battle begins.
   Leave it alone and the globe keeps turning under a nuclear exchange tracing great circles
   between real cities, each launch in its bloc's colours and never aimed at its own side;
-  a finished game returns here on its own.
+  a finished game returns here on its own. **Drag the globe** to turn it — it rests tilted
+  towards the north pole, since that is where the great circle between any two northern
+  capitals actually goes.
 - The missile flies to the click point and detonates into an expanding blast.
 - Any incoming warhead caught in a blast is destroyed — blasts chain-react.
 - Watch for **MIRVs** (orange, wave 2+) that split into several warheads, and **smart bombs**
