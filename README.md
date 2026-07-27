@@ -29,6 +29,22 @@ npm run build    # type-check + production build
 - Watch for **MIRVs** (orange, wave 2+) that split into several warheads, and **smart bombs**
   (magenta, wave 3+) that dodge your blasts and must be hit directly.
 - Protect your cities. Batteries reload each wave; unused ammo and surviving cities score bonuses.
+
+### SLBM ATTACK
+
+Every third wave from the third, the war moves offshore and the camera swings round to an
+oblique view of the ocean — the coast compressed against the right of the screen, open
+water receding away to the left.
+
+- Missile submarines hold station out at sea, hidden except for a **sonar return** on the
+  water. They surface to fire, launching warheads on long, high **ballistic arcs**.
+- A surfaced boat is the only killable one, and only for the few seconds it is up.
+- **1 INTERCEPT** — your counter-missile lobs out here, so you have to aim where the
+  warhead is *going*, not where it is.
+- **2 FLAK** — a burst that hangs in the sky for a few seconds killing whatever flies into
+  it. Good for fencing off a corridor; smart bombs steer around it.
+- **3 STRIKE** — thrown at a point on the water rather than the sky. Sinks a surfaced boat,
+  and takes the rest of its salvo out of the wave with it.
 - Every 3,000 points earns a **reserve city** that rebuilds a destroyed one at the next wave.
 - The game ends when all cities — or all batteries — are gone.
 
@@ -39,22 +55,35 @@ npm run build    # type-check + production build
 - **zustand 5** for game state; a single `useFrame` loop (`components/GameLoop.tsx`) runs the simulation
 - **Bloom** post-processing (`@react-three/postprocessing`) makes every emissive element glow
 - Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**,
-  self-hosted (`src/fonts/`, SIL OFL) so the page makes no third-party requests
+  self-hosted (`src/fonts/`, SIL OFL) so the page makes no third-party requests — shipped
+  twice, as `.woff2` for the stylesheet and `.woff` for the in-scene text, because troika
+  (behind drei's `<Text>`) converts wOFF but throws on wOF2, and left to itself would
+  fetch a font from a CDN on every play
 - Intro globe outlines the **real Earth** — Natural Earth coastlines (`world-atlas`) projected
   onto the sphere as glowing lines; the defended city is pinned to actual land
 - **oxlint** for linting, **vitest** for the game-logic tests — both gated in CI
 - Plays on phones: the camera distance is derived from the viewport so the whole
-  battlefield fits any aspect ratio, and rendering cost (reflections, DPR, particle
-  counts) scales down on touch devices
+  battlefield fits any aspect ratio, and rendering cost (reflections, particle counts)
+  scales down on touch devices
+- Frame size is capped against a pixel budget (`game/renderScale.ts`) rather than taken
+  from `devicePixelRatio`: fill cost grows with window area *and* the square of the
+  pixel ratio, so a maximised window on a dense laptop panel would otherwise ask for
+  four times the frame integrated graphics can fill. The ratio is re-derived whenever
+  the window resizes or changes display
+- That budget is only an opening guess at the GPU, so measured frame rate has the last
+  word: `components/AdaptiveRenderScale.tsx` (drei's `PerformanceMonitor`) walks the
+  ratio down towards a 0.6 floor on a machine that drops frames, or back up to the
+  display's native ratio on one that never needed the help
 
 ## Structure
 
 ```
 src/
-  game/        constants, types, zustand store, incoming (MIRV/dodge), audio, shake
+  game/        constants, types, zustand store, incoming (MIRV/dodge), slbm (arcs/subs),
+               renderScale, audio, shake
   components/   IntroScene (globe dive), Scene, GameLoop, GridFloor, ReflectiveFloor,
-                City, Battery, Missiles, Explosion, Shockwave, Starfield, Trail
-  ui/           HUD, IntroOverlay, Overlay, GameBanners (wave/bonus/flash)
+                City, Battery, Submarine, Missiles, Explosion, Shockwave, Starfield, Trail
+  ui/           HUD, WeaponBar, IntroOverlay, Overlay, GameBanners (wave/bonus/flash)
 ```
 
 ## Architecture note

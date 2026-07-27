@@ -21,8 +21,8 @@ export const isTouch = coarsePointer
 export const quality = {
   /** Screen-space reflections are the single most expensive effect; desktop only. */
   reflections: !isMobile,
-  /** Cap device pixel ratio — a 3× iPhone screen would otherwise shade 9× the pixels. */
-  maxDpr: isMobile ? 1.5 : 2,
+  // The device pixel ratio is capped too, but it depends on the current window size
+  // rather than the device alone — see renderScale.ts / useRenderDpr.ts.
   starCount: isMobile ? 220 : 600,
   bloomIntensity: isMobile ? 0.7 : 0.9,
   /** Sparks are cheap, but fewer of them keeps overdraw down on tiled GPUs. */

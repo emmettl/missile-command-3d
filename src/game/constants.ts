@@ -1,3 +1,5 @@
+import type { IncomingKind } from './types'
+
 // Central tuning values for the whole game. The playfield is the z = 0 plane:
 // x is horizontal, y is vertical (up), the camera looks along -z. This gives the
 // classic 2D Missile Command layout a fully 3D presentation.
@@ -60,16 +62,98 @@ export function smartChanceForWave(wave: number): number {
   return Math.min(0.22, 0.06 + (wave - SMART_FIRST_WAVE) * 0.04)
 }
 
+// --- SLBM ATTACK -----------------------------------------------------------------
+// Every third wave from the third, the war moves offshore: submarines surface out at
+// sea and lob ballistic missiles at the coast on high arcs. The camera swings round to
+// an oblique view of the same z = 0 plane, so the cities compress onto the right of the
+// screen and the ocean recedes away to the left.
+
+export const SLBM_FIRST_WAVE = 3
+export const SLBM_WAVE_INTERVAL = 3
+
+/** The wave's flavour. Decided once in `beginWave` and read by camera, loop and UI. */
+export function modeForWave(wave: number): 'classic' | 'slbm' {
+  return wave >= SLBM_FIRST_WAVE && wave % SLBM_WAVE_INTERVAL === 0 ? 'slbm' : 'classic'
+}
+
+// The ocean: a band of open water off the left edge of the coast. Submarines hold
+// station anywhere in it, spread through z as well as x so the water reads as a
+// surface rather than a line.
+export const SEA = {
+  minX: -104,
+  maxX: -38, // nearest a submarine dares come to the coast
+  halfDepth: 12, // z spread
+}
+
+/** How far the camera swings round for the offshore view, in radians. */
+export const SLBM_CAMERA_YAW = 0.52
+
+export const SUBS_BASE = 2 // submarines at the first SLBM wave
+export const SUBS_PER_WAVE = 1 / 3 // ...and roughly one more every three waves after
+export const SUBS_MAX = 5
+
+// A submarine's cycle: it runs deep and untouchable, surfaces to shoot, then dives and
+// relocates. The exposed window is the whole game of the mode — it is the only time the
+// boat can be killed, and killing it takes the rest of its salvo out of the wave.
+export const SUB_SUBMERGED_TIME = [3.5, 6.5] as const // random hold before surfacing
+export const SUB_SURFACING_TIME = 1.1
+export const SUB_DIVING_TIME = 1.1
+export const SUB_SALVO = [2, 3] as const // missiles per surfacing
+export const SUB_SALVO_INTERVAL = 1.15
+export const SUB_HULL_LENGTH = 7.5
+export const SUB_KILL_SCORE = 300
+
+// Ballistic arcs. Apex is a fraction of ground track, floored so even a short lob
+// climbs into the sky, and the whole flight is slower than a classic dive — you can
+// see it coming, the difficulty is judging where it will be, not whether you noticed.
+export const SLBM_SPEED = 15 // units/second along the ground track at wave 1
+export const SLBM_SPEED_PER_WAVE = 0.9
+export const SLBM_APEX_RATIO = 0.42
+export const SLBM_APEX_MIN = 22
+export const SLBM_APEX_MAX = 52
+export const SCORE_PER_SLBM = 45
+
+export function slbmSpeedForWave(wave: number): number {
+  return SLBM_SPEED + Math.max(0, wave - SLBM_FIRST_WAVE) * SLBM_SPEED_PER_WAVE
+}
+
+export function subCountForWave(wave: number): number {
+  return Math.min(SUBS_MAX, Math.round(SUBS_BASE + (wave - SLBM_FIRST_WAVE) * SUBS_PER_WAVE))
+}
+
+// Weapons available in the mode. The interceptor is the familiar counter-missile, but
+// it lobs too, so it has to be aimed where the warhead is going.
+export const INTERCEPTOR_ARC_RATIO = 0.3 // apex as a fraction of range
+export const INTERCEPTOR_ARC_SPEED = 30 // slower than the classic straight shot
+
+// Flak: a cheap cloud that hangs in the air and kills whatever flies into it. Wide and
+// patient rather than precise — and useless against smart bombs, which steer around any
+// live burst just as they do a blast.
+export const FLAK_ROUNDS = 6 // per SLBM wave
+export const FLAK_RADIUS = 4.6
+export const FLAK_GROW_TIME = 0.25
+export const FLAK_HOLD_TIME = 3.4
+export const FLAK_FADE_TIME = 0.7
+export const FLAK_SPEED = 46
+
+// Sub strike: a slow torpedo-carrying rocket lobbed out to a point on the water. It
+// only ever kills what is on the surface, so it is worth nothing unless a boat has
+// committed to a launch.
+export const SUB_STRIKE_ROUNDS = 3 // per SLBM wave
+export const SUB_STRIKE_SPEED = 26
+export const SUB_STRIKE_RADIUS = 7.5
+
 // A reserve city is earned each time the score crosses a multiple of this, and is
 // spent at the start of a wave to rebuild a destroyed city (classic Missile Command).
 export const BONUS_CITY_SCORE = 3000
 
 // Scoring
 export const SCORE_PER_MISSILE = 25
-export const SCORE_BY_KIND: Record<'normal' | 'mirv' | 'smart', number> = {
+export const SCORE_BY_KIND: Record<IncomingKind, number> = {
   normal: 25,
   mirv: 40,
   smart: 75,
+  slbm: SCORE_PER_SLBM,
 }
 export const SCORE_PER_CITY_BONUS = 100
 export const SCORE_PER_AMMO_BONUS = 5
@@ -82,8 +166,18 @@ export function missileCountForWave(wave: number): number {
   return 8 + wave * 2
 }
 
+export function slbmCountForWave(wave: number): number {
+  // Fewer bodies than a classic wave, because each one takes far longer to arrive.
+  return 6 + wave
+}
+
 // Palette
 export const COLORS = {
+  sub: '#8fe0d0',
+  subHull: '#16323c',
+  subPing: '#2f7d74',
+  flak: '#ffd166',
+  strike: '#b6ff6e',
   player: '#38f0ff',
   playerTrail: '#0aa9c4',
   enemy: '#ff5a5a',

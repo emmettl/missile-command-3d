@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { Mesh } from 'three'
-import { Trail } from './Trail'
+import { ArcTrail, Trail } from './Trail'
 import { COLORS } from '../game/constants'
 import type { IncomingMissile, PlayerMissile } from '../game/types'
 
@@ -9,6 +9,9 @@ const KIND_STYLE = {
   normal: { color: COLORS.enemy, trail: COLORS.enemyTrail, radius: 0.28 },
   mirv: { color: COLORS.mirv, trail: COLORS.mirvTrail, radius: 0.34 },
   smart: { color: COLORS.smart, trail: COLORS.smartTrail, radius: 0.3 },
+  // Sea-launched warheads run hotter and bigger — they are the only thing in the sky
+  // during an SLBM wave, and they have to read from right across the ocean.
+  slbm: { color: COLORS.enemy, trail: COLORS.enemyTrail, radius: 0.36 },
 } as const
 
 export function IncomingView({ m }: { m: IncomingMissile }) {
@@ -25,7 +28,11 @@ export function IncomingView({ m }: { m: IncomingMissile }) {
   })
   return (
     <group>
-      <Trail start={m.start} getEnd={() => m.pos} color={style.trail} />
+      {m.arc ? (
+        <ArcTrail start={m.start} target={m.target} arc={m.arc} color={style.trail} />
+      ) : (
+        <Trail start={m.start} getEnd={() => m.pos} color={style.trail} />
+      )}
       <mesh ref={head} position={m.pos}>
         <sphereGeometry args={[style.radius, 16, 16]} />
         <meshStandardMaterial
@@ -39,19 +46,30 @@ export function IncomingView({ m }: { m: IncomingMissile }) {
   )
 }
 
+const WEAPON_STYLE = {
+  interceptor: { color: COLORS.player, trail: COLORS.playerTrail, radius: 0.22 },
+  flak: { color: COLORS.flak, trail: COLORS.flak, radius: 0.26 },
+  strike: { color: COLORS.strike, trail: COLORS.strike, radius: 0.3 },
+} as const
+
 export function PlayerView({ m }: { m: PlayerMissile }) {
   const head = useRef<Mesh>(null)
+  const style = WEAPON_STYLE[m.weapon]
   useFrame(() => {
     if (head.current) head.current.position.copy(m.pos)
   })
   return (
     <group>
-      <Trail start={m.start} getEnd={() => m.pos} color={COLORS.playerTrail} />
+      {m.arc ? (
+        <ArcTrail start={m.start} target={m.target} arc={m.arc} color={style.trail} />
+      ) : (
+        <Trail start={m.start} getEnd={() => m.pos} color={style.trail} />
+      )}
       <mesh ref={head} position={m.pos}>
-        <sphereGeometry args={[0.22, 16, 16]} />
+        <sphereGeometry args={[style.radius, 16, 16]} />
         <meshStandardMaterial
-          color={COLORS.player}
-          emissive={COLORS.player}
+          color={style.color}
+          emissive={style.color}
           emissiveIntensity={2.6}
           toneMapped={false}
         />

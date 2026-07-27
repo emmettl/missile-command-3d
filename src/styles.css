@@ -363,6 +363,82 @@ h1.danger {
   text-shadow: 0 0 14px rgba(255, 90, 90, 0.6);
 }
 
+/* The offshore banner runs amber — a different war from the one overhead. */
+.wave-banner.slbm .wb-wave {
+  color: #ffd166;
+  text-shadow: 0 0 22px rgba(255, 209, 102, 0.65);
+}
+
+.wb-note {
+  font-family: var(--pixel);
+  font-size: clamp(8px, 1.1vw, 11px);
+  color: #8fe0d0;
+  margin-top: 10px;
+  letter-spacing: 2px;
+  opacity: 0.85;
+}
+
+/* ---------- Weapon selector (SLBM waves) ---------- */
+.weapon-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.weapon {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #cfe9ff;
+  background: rgba(8, 16, 32, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-family: var(--pixel);
+  font-size: 10px;
+  letter-spacing: 1px;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.weapon.on {
+  color: var(--ink);
+  background: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow: 0 0 18px rgba(56, 240, 255, 0.45);
+}
+
+.weapon.spent {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.weapon-key {
+  opacity: 0.55;
+}
+
+.weapon-rounds {
+  padding-left: 6px;
+  border-left: 1px solid currentColor;
+  opacity: 0.8;
+}
+
+@media (max-width: 560px) {
+  .weapon {
+    padding: 7px 9px;
+    font-size: 8px;
+    gap: 5px;
+  }
+}
+
 @keyframes bannerIn {
   from {
     transform: translateY(-16px);
