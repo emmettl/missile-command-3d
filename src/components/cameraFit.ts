@@ -14,6 +14,18 @@ import type { WaveMode } from '../game/types'
 
 export const CAMERA_FOV = 50 // vertical, degrees
 
+/**
+ * The modes whose camera is solved by framing a volume. BOMBERS is not one of them: you
+ * are standing in the gun pit looking wherever you point, so its camera is a pose rather
+ * than a fit, and lives in GunRig. Spelling that out in the type keeps this file from
+ * having to invent a meaningless box for it.
+ */
+export type FittedMode = Exclude<WaveMode, 'bombers'>
+
+export function isFitted(mode: WaveMode): mode is FittedMode {
+  return mode !== 'bombers'
+}
+
 // What must stay on screen, with a little breathing room.
 // Missiles spawn clamped to ±FIELD.maxX, so that plus a small margin is all that
 // must be framed — keeping it tight matters on narrow screens, where this figure
@@ -48,7 +60,7 @@ interface Framing {
   exact?: boolean
 }
 
-const FRAMING: Record<WaveMode, Framing> = {
+const FRAMING: Record<FittedMode, Framing> = {
   // Chosen so the solve below reproduces the original head-on framing exactly: the box
   // is symmetric about the look height, 18 units either side, as VERTICAL_SPAN was.
   classic: {
@@ -157,7 +169,7 @@ export interface CameraFit {
   centerX: number
 }
 
-export function computeCameraFit(aspect: number, mode: WaveMode = 'classic'): CameraFit {
+export function computeCameraFit(aspect: number, mode: FittedMode = 'classic'): CameraFit {
   const f = FRAMING[mode]
   const halfFov = (CAMERA_FOV * Math.PI) / 180 / 2
   const t = Math.tan(halfFov)
@@ -193,7 +205,7 @@ export function computeCameraFit(aspect: number, mode: WaveMode = 'classic'): Ca
  * The volume a mode promises to keep on screen. Derived from the same framing table the
  * solve uses, so the framing tests can't drift away from what the camera actually does.
  */
-export function framedBox(mode: WaveMode) {
+export function framedBox(mode: FittedMode) {
   const { minX, maxX, minY, maxY, halfDepth } = FRAMING[mode]
   return { minX, maxX, minY, maxY, halfDepth }
 }

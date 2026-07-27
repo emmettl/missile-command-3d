@@ -6,8 +6,10 @@ import { quality } from '../game/device'
 import { useGameStore } from '../game/useGameStore'
 import { stepShake } from '../game/shake'
 import { unlockAudio, Sfx } from '../game/audio'
-import { CAMERA_FOV, CameraFit, computeCameraFit, framedBox } from './cameraFit'
+import { CAMERA_FOV, CameraFit, computeCameraFit, framedBox, isFitted } from './cameraFit'
 import { Coastline } from './Coastline'
+import { GunRig } from './GunRig'
+import { BomberView, BombView, Tracers } from './Bombers'
 import { SubmarineView } from './Submarine'
 import { ReflectiveFloor } from './ReflectiveFloor'
 import { GridFloor } from './GridFloor'
@@ -210,6 +212,8 @@ export function Scene() {
   const explosions = useGameStore((s) => s.explosions)
   const shockwaves = useGameStore((s) => s.shockwaves)
   const submarines = useGameStore((s) => s.submarines)
+  const bombers = useGameStore((s) => s.bombers)
+  const bombs = useGameStore((s) => s.bombs)
   const mode = useGameStore((s) => s.waveMode)
   const weapon = useGameStore((s) => s.weapon)
 
@@ -217,7 +221,11 @@ export function Scene() {
   // when the war moves offshore and the camera has to swing round.
   const size = useThree((s) => s.size)
   const fit = useMemo(
-    () => computeCameraFit(size.height > 0 ? size.width / size.height : 1, mode),
+    () =>
+      computeCameraFit(
+        size.height > 0 ? size.width / size.height : 1,
+        isFitted(mode) ? mode : 'classic',
+      ),
     [size.width, size.height, mode],
   )
 
@@ -226,7 +234,7 @@ export function Scene() {
       <color attach="background" args={[COLORS.sky]} />
       <fog attach="fog" args={[COLORS.sky, fit.fogNear, fit.fogFar]} />
 
-      <CameraRig fit={fit} />
+      {mode === 'bombers' ? <GunRig /> : <CameraRig fit={fit} />}
       <ambientLight intensity={0.35} />
       <hemisphereLight args={['#33406a', '#0a0d18', 0.5]} />
       <directionalLight position={[10, 30, 20]} intensity={0.6} />
@@ -262,8 +270,16 @@ export function Scene() {
       {submarines.map((s) => (
         <SubmarineView key={s.id} sub={s} />
       ))}
+      {bombers.map((b) => (
+        <BomberView key={b.id} bomber={b} />
+      ))}
+      {bombs.map((b) => (
+        <BombView key={b.id} bomb={b} />
+      ))}
+      {mode === 'bombers' && <Tracers />}
 
-      <AimPlane active={weapon !== 'strike'} />
+      {/* In the gun pit the pointer is the gun, so the aim planes stand down entirely. */}
+      {mode !== 'bombers' && <AimPlane active={weapon !== 'strike'} />}
       {mode === 'slbm' && <SeaAimPlane active={weapon === 'strike'} />}
       <GameLoop />
     </>

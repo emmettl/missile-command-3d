@@ -1,4 +1,4 @@
-import type { IncomingKind } from './types'
+import type { IncomingKind, WaveMode } from './types'
 
 // Central tuning values for the whole game. The playfield is the z = 0 plane:
 // x is horizontal, y is vertical (up), the camera looks along -z. This gives the
@@ -71,9 +71,75 @@ export function smartChanceForWave(wave: number): number {
 export const SLBM_FIRST_WAVE = 3
 export const SLBM_WAVE_INTERVAL = 3
 
-/** The wave's flavour. Decided once in `beginWave` and read by camera, loop and UI. */
-export function modeForWave(wave: number): 'classic' | 'slbm' {
+// --- BOMBERS INCOMING ---------------------------------------------------------------
+// Every fifth wave from the fifth, you climb into the pit at one of the batteries and
+// man the gun yourself. Formations come over at altitude on varied bearings, release,
+// and it is on you to catch them first — while facing only one way at a time.
+
+export const BOMBER_FIRST_WAVE = 5
+export const BOMBER_WAVE_INTERVAL = 5
+
+/**
+ * The wave's flavour. Decided once in `beginWave` and read by camera, loop and UI.
+ *
+ * The two special modes land on their own cycles, which collide every fifteen waves;
+ * the gun takes precedence there because it comes round least often. `modeForWave`'s
+ * first twenty waves are pinned by a test, since a rotation is the sort of thing that
+ * looks right in the rule and wrong in the sequence.
+ */
+export function modeForWave(wave: number): WaveMode {
+  if (wave >= BOMBER_FIRST_WAVE && wave % BOMBER_WAVE_INTERVAL === 0) return 'bombers'
   return wave >= SLBM_FIRST_WAVE && wave % SLBM_WAVE_INTERVAL === 0 ? 'slbm' : 'classic'
+}
+
+// The gun. Shells fly straight and fast, and burst near whatever they pass, so a near
+// miss counts — the skill being asked for is leading a crossing target, not threading a
+// needle at six hundred metres.
+export const SHELL_SPEED = 100 // units/second
+export const SHELL_BURST_RADIUS = 1.9
+export const SHELL_LIFETIME = 2.4 // seconds before it is spent
+export const SHELL_INTERVAL = 0.16 // ~6 rounds a second
+
+/**
+ * Heat, not ammunition. A ten-round magazine makes no sense for a gun, and counting
+ * rounds is a worse game than managing bursts: fire too long and the gun locks out until
+ * it has cooled well below the limit.
+ */
+export const GUN_HEAT_PER_SHOT = 0.075
+export const GUN_COOL_PER_SECOND = 0.34
+export const GUN_LOCKOUT_BELOW = 0.35 // must fall back to this before it will fire again
+
+export const BOMBER_SPEED = 12 // units/second along its run
+export const BOMBER_SPEED_PER_WAVE = 0.6
+export const BOMBER_ALTITUDE = [20, 30] as const
+export const BOMBER_HITS = 4 // shell bursts to bring one down
+export const BOMBER_HALF_SPAN = 3.4 // for hit tests, and roughly how big it looks
+export const BOMB_HITS = 1
+export const BOMB_GRAVITY = 16 // units/second², tuned for a readable fall
+export const BOMBS_PER_BOMBER = 2
+
+/** How far out a formation appears, and how far past the coast it flies before turning for home. */
+export const BOMBER_RUN_RADIUS = 120
+
+export const SCORE_PER_BOMBER = 150
+export const SCORE_PER_BOMB = 30
+
+export function bomberSpeedForWave(wave: number): number {
+  return BOMBER_SPEED + Math.max(0, wave - BOMBER_FIRST_WAVE) * BOMBER_SPEED_PER_WAVE
+}
+
+/** Flights of three, so the count steps in threes and the sky fills in formations. */
+export function bomberFlightsForWave(wave: number): number {
+  return 3 + Math.floor((wave - BOMBER_FIRST_WAVE) / BOMBER_WAVE_INTERVAL)
+}
+
+/**
+ * Whether the player may move between emplacements. Held back on the mode's first
+ * outing: learning to lead a crossing target is enough to be going on with, without
+ * also being asked where to stand.
+ */
+export function canChangePosition(wave: number): boolean {
+  return wave > BOMBER_FIRST_WAVE
 }
 
 /**
@@ -185,6 +251,9 @@ export function slbmCountForWave(wave: number): number {
 
 // Palette
 export const COLORS = {
+  bomber: '#2a3346',
+  bomberGlow: '#ffb45c',
+  tracer: '#ffe9a8',
   coast: '#7fe9ff',
   coastGlow: '#2f7fd0',
   land: '#0b1024',

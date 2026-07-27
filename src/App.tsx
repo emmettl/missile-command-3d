@@ -9,6 +9,7 @@ import { Overlay } from './ui/Overlay'
 import { IntroOverlay } from './ui/IntroOverlay'
 import { BonusToast, FlashOverlay, SlbmWarning, WaveBanner } from './ui/GameBanners'
 import { WeaponBar } from './ui/WeaponBar'
+import { GunHUD } from './ui/GunHUD'
 import { RotateHint } from './ui/RotateHint'
 import { isMobile } from './game/device'
 import { START_FACTOR } from './game/renderScale'
@@ -38,6 +39,7 @@ export default function App() {
       </Canvas>
       <HUD />
       <WeaponBar />
+      <GunHUD />
       <IntroOverlay />
       <Overlay />
       <WaveBanner />

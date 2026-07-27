@@ -8,15 +8,16 @@ import type { WaveMode } from '../game/types'
 // the horizon bar sitting in the middle of the frame.
 //
 // The horizon bar is furniture for a head-on camera: it is a line drawn across the far
-// edge of the world, and it only reads as a horizon when you are looking straight at
-// it. Swing round to the offshore view and it becomes a bright bar lying across the
-// middle of the ocean, so out there the grid simply fades into the fog instead.
+// edge of the world, and it only reads as a horizon when you are looking straight at it.
+// Swing round to the offshore view and it becomes a bright bar lying across the middle of
+// the ocean; stand up in the gun pit and turn round and it is a wall in one direction and
+// missing in every other. Both of those modes let the grid fade into the fog instead.
 export function GridFloor({ distance, mode = 'classic' }: { distance: number; mode?: WaveMode }) {
   const horizonZ = -distance * 1.8
-  if (mode === 'slbm') {
+  if (mode !== 'classic') {
     return (
       <Grid
-        position={[-40, 0.02, 0]}
+        position={[mode === 'slbm' ? -40 : 0, 0.02, 0]}
         infiniteGrid
         followCamera={false}
         cellSize={6}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../game/useGameStore'
 import { slbmWarningDue } from '../game/constants'
 import { Sfx } from '../game/audio'
+import { isTouch } from '../game/device'
 
 // Red standing warning through the tail of the wave before an SLBM attack, so the mode
 // change is something you see coming rather than something that happens to you.
@@ -52,12 +53,23 @@ export function WaveBanner() {
     if (id === 0) return
     setShow(true)
     // The offshore banner holds a beat longer — it is also the camera swinging round.
-    const t = setTimeout(() => setShow(false), mode === 'slbm' ? 3200 : 2400)
+    const t = setTimeout(() => setShow(false), mode === 'classic' ? 2400 : 3400)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   if (!show || status !== 'playing') return null
+  if (mode === 'bombers') {
+    return (
+      <div className="wave-banner bombers">
+        <div className="wb-wave">BOMBERS INCOMING</div>
+        <div className="wb-count">WAVE {wave} — MAN THE GUN</div>
+        <div className="wb-note">
+          {isTouch ? 'DRAG TO TRAVERSE · HOLD FIRE' : 'MOUSE TO TRAVERSE · HOLD TO FIRE'}
+        </div>
+      </div>
+    )
+  }
   if (mode === 'slbm') {
     return (
       <div className="wave-banner slbm">
