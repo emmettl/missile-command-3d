@@ -44,8 +44,13 @@ npm run build    # type-check + production build
   onto the sphere as glowing lines; the defended city is pinned to actual land
 - **oxlint** for linting, **vitest** for the game-logic tests — both gated in CI
 - Plays on phones: the camera distance is derived from the viewport so the whole
-  battlefield fits any aspect ratio, and rendering cost (reflections, DPR, particle
-  counts) scales down on touch devices
+  battlefield fits any aspect ratio, and rendering cost (reflections, particle counts)
+  scales down on touch devices
+- Frame size is capped against a pixel budget (`game/renderScale.ts`) rather than taken
+  from `devicePixelRatio`: fill cost grows with window area *and* the square of the
+  pixel ratio, so a maximised window on a dense laptop panel would otherwise ask for
+  four times the frame integrated graphics can fill. The ratio is re-derived whenever
+  the window resizes or changes display
 
 ## Structure
 
