@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { ThreeEvent, useFrame, useThree } from '@react-three/fiber'
-import { Fog, PerspectiveCamera } from 'three'
+import { Fog, Mesh, PerspectiveCamera } from 'three'
 import { FIELD, COLORS, SEA } from '../game/constants'
 import { quality } from '../game/device'
 import { useGameStore } from '../game/useGameStore'
@@ -87,7 +87,22 @@ function PlainFloor({ distance }: { distance: number }) {
   )
 }
 
+// Toggling a mesh in and out of the pointer picture has to name *both* states. Passing
+// `raycast={undefined}` for "pickable" does not restore three's default — React removes
+// the prop and R3F puts back whatever it was at mount, which for a plane that mounts
+// disabled is the disabled function. That is how the strike aim plane came to be
+// unpickable everywhere, permanently: it mounts while the interceptor is selected.
 const IGNORE_POINTER = () => null
+const PICKABLE = Mesh.prototype.raycast
+
+// Both aim planes are made far larger than any frustum can cut out of them. They are
+// invisible and write no depth, so size costs nothing, and the alternative is a rim of
+// screen where clicking does nothing at all.
+const AIM_PLANE_SPAN = 2000
+
+function clamp(n: number, low: number, high: number): number {
+  return Math.min(Math.max(n, low), high)
+}
 
 // Full-field invisible plane at z = 0 that captures aim/tap input. In an SLBM wave it
 // grows to cover the whole theatre, so a warhead can be met anywhere along its arc.
@@ -96,29 +111,49 @@ function AimPlane({ active }: { active: boolean }) {
   const soundOn = useGameStore((s) => s.soundOn)
   const mode = useGameStore((s) => s.waveMode)
 
-  const { width, height, midX, midY } = useMemo(() => {
+  // Sized well past anything the camera can frame, because a plane that stops at the
+  // edge of the playfield leaves dead screen all round it — and offshore, where the
+  // camera is swung round and tilted down, that dead area was most of the picture. The
+  // plane catches the click; the aim point is clamped afterwards.
+  const { width, height, midX, midY, bounds } = useMemo(() => {
     if (mode === 'classic') {
       const h = FIELD.skyY + 12
       return {
-        width: FIELD.maxX - FIELD.minX + 20,
-        height: h,
+        width: AIM_PLANE_SPAN,
+        height: AIM_PLANE_SPAN,
         midX: (FIELD.maxX + FIELD.minX) / 2,
         midY: h / 2 - 2,
+        bounds: {
+          minX: FIELD.minX - 6,
+          maxX: FIELD.maxX + 6,
+          minY: FIELD.groundY + 0.3,
+          maxY: FIELD.skyY + 6,
+        },
       }
     }
     const box = framedBox('slbm')
     return {
-      width: box.maxX - box.minX,
-      height: box.maxY - box.minY,
+      width: AIM_PLANE_SPAN,
+      height: AIM_PLANE_SPAN,
       midX: (box.maxX + box.minX) / 2,
       midY: (box.maxY + box.minY) / 2,
+      bounds: {
+        minX: box.minX,
+        maxX: box.maxX,
+        minY: FIELD.groundY + 0.3,
+        maxY: box.maxY,
+      },
     }
   }, [mode])
 
   const onDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
     unlockAudio()
-    const fired = fireAt(e.point.x, e.point.y)
+    // Anywhere on the plane is a valid click; the shot itself is held to the playfield,
+    // so a click low over the water becomes a low intercept rather than nothing at all.
+    const x = clamp(e.point.x, bounds.minX, bounds.maxX)
+    const y = clamp(e.point.y, bounds.minY, bounds.maxY)
+    const fired = fireAt(x, y)
     if (soundOn) (fired ? Sfx.launch : Sfx.empty)()
   }
 
@@ -126,7 +161,7 @@ function AimPlane({ active }: { active: boolean }) {
     <mesh
       position={[midX, midY, 0]}
       onPointerDown={onDown}
-      raycast={active ? undefined : IGNORE_POINTER}
+      raycast={active ? PICKABLE : IGNORE_POINTER}
     >
       <planeGeometry args={[width, height]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} />
@@ -140,14 +175,16 @@ function AimPlane({ active }: { active: boolean }) {
 function SeaAimPlane({ active }: { active: boolean }) {
   const fireStrike = useGameStore((s) => s.fireStrike)
   const soundOn = useGameStore((s) => s.soundOn)
-  const width = SEA.maxX - SEA.minX + 40
-  const depth = SEA.halfDepth * 4
   const midX = (SEA.maxX + SEA.minX) / 2
 
   const onDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
     unlockAudio()
-    const fired = fireStrike(e.point.x, e.point.z)
+    // Held to the water the boats actually work in, so a click out towards the horizon
+    // still puts the strike somewhere it could do something.
+    const x = clamp(e.point.x, SEA.minX - 8, SEA.maxX + 8)
+    const z = clamp(e.point.z, -SEA.halfDepth * 1.6, SEA.halfDepth * 1.6)
+    const fired = fireStrike(x, z)
     if (soundOn) (fired ? Sfx.launch : Sfx.empty)()
   }
 
@@ -156,9 +193,10 @@ function SeaAimPlane({ active }: { active: boolean }) {
       rotation={[-Math.PI / 2, 0, 0]}
       position={[midX, 0.05, 0]}
       onPointerDown={onDown}
-      raycast={active ? undefined : IGNORE_POINTER}
+      raycast={active ? PICKABLE : IGNORE_POINTER}
     >
-      <planeGeometry args={[width, depth]} />
+      {/* Every bit of water the camera can see, not just the band the boats sit in. */}
+      <planeGeometry args={[AIM_PLANE_SPAN, AIM_PLANE_SPAN]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} />
     </mesh>
   )
