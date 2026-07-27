@@ -11,6 +11,7 @@ import {
   ShaderMaterial,
 } from 'three'
 import { COLORS } from '../game/constants'
+import { quality } from '../game/device'
 import {
   type CoastPoint,
   coastGlowStrip,
@@ -18,6 +19,7 @@ import {
   contourPaths,
   islandPaths,
   landStrip,
+  stripIndices,
 } from '../game/coastline'
 
 // The chart the offshore wave is fought over: a lit sea, dark land, and the coastline
@@ -34,15 +36,36 @@ import {
 // added or removed. Anything this component owned per render would be reset by that,
 // several times a second, in the middle of the fade.
 
-const SEA_LEVEL = 0.08 // the outlines, clear of everything below them
-const GLOW_Y = 0.06
-const LAND_Y = 0.04
-const SEA_Y = 0.03
+// Heights for the stacked chart layers, and the reason they are as far apart as they are.
+//
+// These were originally a hundredth of a unit apart, which looked fine and was very
+// nearly broken. Depth precision falls off with the square of distance: seen from the
+// ~150 units the offshore camera sits at, with a 0.1 near plane, a 24-bit depth buffer
+// resolves about 0.013 units — so layers 0.01 apart were inside the noise. Desktop mostly
+// won those coin flips; an iPhone did not, and the coast came apart into a sawtooth of
+// flickering triangles. (The grid showing through the land, which looked like the same
+// bug, was a separate one — see `landStrip`.)
+//
+// Three things fix it and all three are here, because any one alone is thin: the layers
+// are spaced properly, the near plane has been pulled out (see App.tsx), and each layer
+// carries a polygon offset so the winner is decided in depth-buffer units rather than by
+// whatever precision the device happens to have.
+const SEA_LEVEL = 0.4 // the outlines, clear of everything below them
+const GLOW_Y = 0.3
+const LAND_Y = 0.2
+const SEA_Y = 0.1
+
+/** Pulls a layer towards the camera in depth units — the standard fix for coplanar art. */
+function decal(order: number) {
+  return { polygonOffset: true, polygonOffsetFactor: -order, polygonOffsetUnits: -order * 2 }
+}
 
 const CONTOUR_OPACITY = [0.3, 0.2, 0.12]
 const SHORE_OPACITY = 0.95
 const ISLAND_OPACITY = 0.7
-const GLOW_STRENGTH = 0.62
+// Bloom makes far more of a large additive area on a phone than it does on a desktop
+// panel, where this reads as a bleed rather than a bar of light.
+const GLOW_STRENGTH = quality.reflections ? 0.62 : 0.4
 const SEA_OPACITY = 0.86
 const FADE_IN = 1.1 // seconds, roughly the length of the camera's swing
 
@@ -52,13 +75,6 @@ function lineGeometry(points: CoastPoint[]): BufferGeometry {
   const g = new BufferGeometry()
   g.setAttribute('position', new Float32BufferAttribute(flat, 3))
   return g
-}
-
-/** Indices that wind a two-row vertex strip (a, b, a, b …) into a continuous band. */
-function stripIndices(vertexCount: number): number[] {
-  const index: number[] = []
-  for (let i = 0; i + 3 < vertexCount; i += 2) index.push(i, i + 1, i + 2, i + 1, i + 3, i + 2)
-  return index
 }
 
 interface Chart {
@@ -101,7 +117,13 @@ function chart() {
 
   const outline = (points: CoastPoint[], color: string, opacity: number, depthWrite = true) => ({
     geometry: lineGeometry(points),
-    material: new LineBasicMaterial({ color, transparent: true, opacity: 0, depthWrite }),
+    material: new LineBasicMaterial({
+      color,
+      transparent: true,
+      opacity: 0,
+      depthWrite,
+      ...decal(4),
+    }),
     opacity,
   })
 
@@ -129,7 +151,7 @@ function chart() {
     ],
     land: {
       geometry: landGeometry,
-      material: new MeshBasicMaterial({ color: new Color(COLORS.sky) }),
+      material: new MeshBasicMaterial({ color: new Color(COLORS.sky), ...decal(2) }),
     },
     glow: {
       geometry: glowGeometry,
@@ -143,6 +165,7 @@ function chart() {
         transparent: true,
         depthWrite: false,
         blending: AdditiveBlending,
+        ...decal(3),
       }),
     },
     sea: new MeshBasicMaterial({
@@ -150,6 +173,7 @@ function chart() {
       transparent: true,
       opacity: 0,
       depthWrite: false,
+      ...decal(1),
     }),
   }
   return cached
