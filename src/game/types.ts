@@ -19,7 +19,23 @@ export interface BatteryState {
 // game loop every frame; React only re-renders the entity lists when entities are
 // added or removed (the array reference changes).
 
-export type IncomingKind = 'normal' | 'mirv' | 'smart'
+export type IncomingKind = 'normal' | 'mirv' | 'smart' | 'slbm'
+
+export type WaveMode = 'classic' | 'slbm'
+
+/** Player weapons. Only the interceptor exists in a classic wave. */
+export type WeaponKind = 'interceptor' | 'flak' | 'strike'
+
+/**
+ * A ballistic path: the missile is lerped from start to target while a parabola lifts
+ * it, so `elapsed / duration` is the whole of its state. Straight-flying missiles carry
+ * no arc and are advanced by velocity instead.
+ */
+export interface Arc {
+  apex: number // metres of lift at the top of the parabola
+  duration: number // seconds start to impact
+  elapsed: number
+}
 
 export interface IncomingMissile {
   id: number
@@ -33,6 +49,8 @@ export interface IncomingMissile {
   splitsLeft: number // MIRV warheads still to release (0 for non-splitters)
   splitAltitude: number // y at which a MIRV releases its warheads
   dodge: boolean // smart bombs steer away from nearby explosions
+  arc?: Arc // SLBMs fly a parabola; everything else flies straight
+  subId?: number // the boat that fired it, so a kill can retire its salvo
 }
 
 export interface PlayerMissile {
@@ -41,7 +59,11 @@ export interface PlayerMissile {
   start: Vector3
   target: Vector3
   alive: boolean
+  weapon: WeaponKind
+  arc?: Arc
 }
+
+export type BlastKind = 'blast' | 'flak'
 
 export interface Explosion {
   id: number
@@ -49,6 +71,23 @@ export interface Explosion {
   age: number // seconds since detonation
   radius: number // current radius, updated each frame
   dead: boolean
+  kind: BlastKind // flak hangs at radius far longer than a counter-missile blast
+}
+
+export type SubPhase = 'submerged' | 'surfacing' | 'firing' | 'diving'
+
+/**
+ * A missile submarine holding station out at sea. It is only killable while it is up —
+ * `phase` is both the animation state and the vulnerability state.
+ */
+export interface Submarine {
+  id: number
+  pos: Vector3 // on the sea plane; y rises as it surfaces
+  phase: SubPhase
+  timer: number // seconds left in this phase
+  salvoLeft: number // launches remaining in the current surfacing
+  fireTimer: number // seconds until the next launch
+  alive: boolean
 }
 
 // A flat ring that expands across the ground plane when a warhead strikes.

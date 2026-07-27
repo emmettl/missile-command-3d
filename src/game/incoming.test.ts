@@ -74,6 +74,7 @@ describe('applyDodge', () => {
     age: 0,
     radius: 1,
     dead: false,
+    kind: 'blast',
   })
 
   it('veers a smart bomb away from a nearby blast', () => {

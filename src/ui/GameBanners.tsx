@@ -2,22 +2,38 @@ import { useEffect, useRef, useState } from 'react'
 import { useGameStore } from '../game/useGameStore'
 import { Sfx } from '../game/audio'
 
-// "WAVE N — M INCOMING" card shown briefly at the start of each wave.
+// "WAVE N — M INCOMING" card shown briefly at the start of each wave, or the mode's own
+// callsign when the war moves offshore.
 export function WaveBanner() {
   const id = useGameStore((s) => s.waveBannerId)
   const wave = useGameStore((s) => s.wave)
   const toSpawn = useGameStore((s) => s.toSpawn)
   const status = useGameStore((s) => s.status)
+  const mode = useGameStore((s) => s.waveMode)
+  const subs = useGameStore((s) => s.submarines.length)
   const [show, setShow] = useState(false)
 
   useEffect(() => {
     if (id === 0) return
     setShow(true)
-    const t = setTimeout(() => setShow(false), 2400)
+    // The offshore banner holds a beat longer — it is also the camera swinging round.
+    const t = setTimeout(() => setShow(false), mode === 'slbm' ? 3200 : 2400)
     return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   if (!show || status !== 'playing') return null
+  if (mode === 'slbm') {
+    return (
+      <div className="wave-banner slbm">
+        <div className="wb-wave">SLBM ATTACK</div>
+        <div className="wb-count">
+          WAVE {wave} — {subs} {subs === 1 ? 'BOAT' : 'BOATS'} ON SONAR
+        </div>
+        <div className="wb-note">SURFACED BOATS CAN BE SUNK</div>
+      </div>
+    )
+  }
   return (
     <div className="wave-banner">
       <div className="wb-wave">WAVE {wave}</div>

@@ -8,6 +8,7 @@ import { HUD } from './ui/HUD'
 import { Overlay } from './ui/Overlay'
 import { IntroOverlay } from './ui/IntroOverlay'
 import { BonusToast, FlashOverlay, WaveBanner } from './ui/GameBanners'
+import { WeaponBar } from './ui/WeaponBar'
 import { RotateHint } from './ui/RotateHint'
 import { isMobile, quality } from './game/device'
 import { START_FACTOR } from './game/renderScale'
@@ -43,6 +44,7 @@ export default function App() {
         </EffectComposer>
       </Canvas>
       <HUD />
+      <WeaponBar />
       <IntroOverlay />
       <Overlay />
       <WaveBanner />

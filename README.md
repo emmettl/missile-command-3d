@@ -29,6 +29,22 @@ npm run build    # type-check + production build
 - Watch for **MIRVs** (orange, wave 2+) that split into several warheads, and **smart bombs**
   (magenta, wave 3+) that dodge your blasts and must be hit directly.
 - Protect your cities. Batteries reload each wave; unused ammo and surviving cities score bonuses.
+
+### SLBM ATTACK
+
+Every third wave from the third, the war moves offshore and the camera swings round to an
+oblique view of the ocean — the coast compressed against the right of the screen, open
+water receding away to the left.
+
+- Missile submarines hold station out at sea, hidden except for a **sonar return** on the
+  water. They surface to fire, launching warheads on long, high **ballistic arcs**.
+- A surfaced boat is the only killable one, and only for the few seconds it is up.
+- **1 INTERCEPT** — your counter-missile lobs out here, so you have to aim where the
+  warhead is *going*, not where it is.
+- **2 FLAK** — a burst that hangs in the sky for a few seconds killing whatever flies into
+  it. Good for fencing off a corridor; smart bombs steer around it.
+- **3 STRIKE** — thrown at a point on the water rather than the sky. Sinks a surfaced boat,
+  and takes the rest of its salvo out of the wave with it.
 - Every 3,000 points earns a **reserve city** that rebuilds a destroyed one at the next wave.
 - The game ends when all cities — or all batteries — are gone.
 
@@ -60,10 +76,11 @@ npm run build    # type-check + production build
 
 ```
 src/
-  game/        constants, types, zustand store, incoming (MIRV/dodge), audio, shake
+  game/        constants, types, zustand store, incoming (MIRV/dodge), slbm (arcs/subs),
+               renderScale, audio, shake
   components/   IntroScene (globe dive), Scene, GameLoop, GridFloor, ReflectiveFloor,
-                City, Battery, Missiles, Explosion, Shockwave, Starfield, Trail
-  ui/           HUD, IntroOverlay, Overlay, GameBanners (wave/bonus/flash)
+                City, Battery, Submarine, Missiles, Explosion, Shockwave, Starfield, Trail
+  ui/           HUD, WeaponBar, IntroOverlay, Overlay, GameBanners (wave/bonus/flash)
 ```
 
 ## Architecture note
