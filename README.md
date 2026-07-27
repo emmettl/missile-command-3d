@@ -24,6 +24,8 @@ npm run build    # type-check + production build
 
 - **Click anywhere** to fire a counter-missile from your nearest battery.
 - Press **START** on the globe intro — the camera dives into your city and the battle begins.
+  Leave it alone and the globe keeps turning under a nuclear exchange tracing great circles
+  between real cities; a finished game returns here on its own.
 - The missile flies to the click point and detonates into an expanding blast.
 - Any incoming warhead caught in a blast is destroyed — blasts chain-react.
 - Watch for **MIRVs** (orange, wave 2+) that split into several warheads, and **smart bombs**
@@ -50,6 +52,10 @@ water receding away to the left.
   it. Good for fencing off a corridor; smart bombs steer around it.
 - **3 STRIKE** — thrown at a point on the water rather than the sky. Sinks a surfaced boat,
   and takes the rest of its salvo out of the wave with it.
+
+The bar sits at the edge of vision while the fight is in the middle of the screen, so a
+weapon you have never fired keeps advertising itself, and the moment a boat breaks the
+surface the bar says so — the one time a strike is worth anything.
 - Every 3,000 points earns a **reserve city** that rebuilds a destroyed one at the next wave.
 - The game ends when all cities — or all batteries — are gone.
 

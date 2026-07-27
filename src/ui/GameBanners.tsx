@@ -65,7 +65,7 @@ export function WaveBanner() {
         <div className="wb-count">
           WAVE {wave} — {subs} {subs === 1 ? 'BOAT' : 'BOATS'} ON SONAR
         </div>
-        <div className="wb-note">SURFACED BOATS CAN BE SUNK</div>
+        <div className="wb-note">1 INTERCEPT · 2 FLAK · 3 STRIKE</div>
       </div>
     )
   }

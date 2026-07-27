@@ -4,6 +4,7 @@ import { AdditiveBlending, BackSide, Group, Mesh, Vector3 } from 'three'
 import { COLORS } from '../game/constants'
 import { getGame } from '../game/useGameStore'
 import { Starfield } from './Starfield'
+import { GlobeExchange } from './GlobeExchange'
 import { coastlineGeometry, graticuleGeometry, latLonDir } from './earth'
 
 const GLOBE_R = 6
@@ -140,6 +141,11 @@ export function IntroScene() {
             depthWrite={false}
           />
         </mesh>
+
+        {/* Exchanges crossing the globe — the war carrying on without you. Inside the
+            globe group so they turn with it, and behind the opaque core so the ones on
+            the far side are hidden by the planet. */}
+        <GlobeExchange radius={GLOBE_R} />
 
         {/* City marker pinned to the surface */}
         <group position={CITY_LOCAL.toArray()}>

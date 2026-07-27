@@ -73,6 +73,14 @@ interface GameState {
   weapon: WeaponKind
   flakRounds: number
   strikeRounds: number
+  /**
+   * Weapons the player has actually fired, this session. The mode hands you three and
+   * it is easy to play the whole wave with the one you already know, so anything still
+   * untouched keeps advertising itself.
+   */
+  weaponsUsed: WeaponKind[]
+  /** Boats currently on the surface — drives the "there is something to shoot" prompt. */
+  subsExposed: number
 
   // wave spawn bookkeeping (managed by the game loop)
   toSpawn: number
@@ -96,6 +104,11 @@ interface GameState {
   setStatus: (s: GameStatus) => void
   toggleSound: () => void
   awardWaveBonus: () => void
+}
+
+/** Record a weapon as fired, keeping the array reference stable if it already was. */
+function withWeapon(used: WeaponKind[], weapon: WeaponKind): WeaponKind[] {
+  return used.includes(weapon) ? used : [...used, weapon]
 }
 
 /** The battery that answers a call for fire: nearest to x, still standing. */
@@ -135,6 +148,10 @@ export const useGameStore = create<GameState>()((set, get) => ({
   weapon: 'interceptor',
   flakRounds: 0,
   strikeRounds: 0,
+  // The interceptor is the weapon you have been firing since wave one, so it starts
+  // marked as known — it is the baseline, not a discovery.
+  weaponsUsed: ['interceptor'],
+  subsExposed: 0,
 
   toSpawn: 0,
   spawnedThisWave: 0,
@@ -195,6 +212,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
       weapon: 'interceptor',
       flakRounds: mode === 'slbm' ? FLAK_ROUNDS : 0,
       strikeRounds: mode === 'slbm' ? SUB_STRIKE_ROUNDS : 0,
+      subsExposed: 0,
       toSpawn: mode === 'slbm' ? slbmCountForWave(wave) : 8 + wave * 2,
       spawnedThisWave: 0,
       spawnTimer: 1.0, // small breather before the first missile
@@ -234,6 +252,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
         : batteries,
       flakRounds: usesMagazine ? flakRounds : flakRounds - 1,
       players: [...get().players, missile],
+      weaponsUsed: withWeapon(get().weaponsUsed, missile.weapon),
     })
     return true
   },
@@ -250,6 +269,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
     const target = new Vector3(x, 0.3, z)
     set({
       strikeRounds: strikeRounds - 1,
+      weaponsUsed: withWeapon(get().weaponsUsed, 'strike'),
       players: [
         ...get().players,
         {

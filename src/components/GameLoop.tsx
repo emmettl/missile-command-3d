@@ -115,9 +115,11 @@ export function GameLoop() {
       }
 
       // --- Submarines: surface, empty a salvo, dive, move on ---
+      let exposed = 0
       for (const sub of g.submarines) {
         if (!sub.alive) continue
         const fired = stepSubmarine(sub, dt)
+        if (isExposed(sub)) exposed++
         if (!fired) continue
         const live = getGame()
         if (live.spawnedThisWave >= live.toSpawn) continue
@@ -127,6 +129,9 @@ export function GameLoop() {
         useGameStore.setState({ spawnedThisWave: live.spawnedThisWave + 1 })
         if (g.soundOn) Sfx.launch()
       }
+      // Published only on change: phases turn over a handful of times a wave, so this
+      // costs nothing, and it lets the UI prompt at the moment there is a target.
+      if (offshore && exposed !== g.subsExposed) useGameStore.setState({ subsExposed: exposed })
 
       // --- Advance player counter-missiles ---
       for (const m of g.players) {
