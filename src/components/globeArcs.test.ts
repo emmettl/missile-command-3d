@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { Vector3 } from 'three'
 import {
   ARC_LIFT,
+  BLOC_COLORS,
+  BLOC_COUNT,
+  blocOf,
   type Exchange,
   arcPoint,
   inFlight,
@@ -83,6 +86,21 @@ describe('exchanges', () => {
     }
   })
 
+  it('flies in a bloc’s colours, and never at its own side', () => {
+    const seen = new Set<number>()
+    for (let i = 0; i < 400; i++) {
+      const ex = newExchange()
+      expect(ex.bloc).toBeGreaterThanOrEqual(0)
+      expect(ex.bloc).toBeLessThan(BLOC_COUNT)
+      expect(BLOC_COLORS[ex.bloc]).toBeTruthy()
+      // The target belongs to somebody else — nobody nukes their own capital, and it
+      // guarantees an arc lands somewhere a different colour from where it left.
+      expect(blocOf(ex.to)).not.toBe(ex.bloc)
+      seen.add(ex.bloc)
+    }
+    expect(seen.size).toBe(BLOC_COUNT) // every side gets a turn
+  })
+
   it('holds on the pad before launching, so they do not all fly at once', () => {
     const ex = newExchange(seq(0.1, 0.9, 0.5))
     expect(ex.progress).toBeLessThanOrEqual(0)
@@ -90,7 +108,7 @@ describe('exchanges', () => {
   })
 
   it('reports the frame it lands, once', () => {
-    const ex: Exchange = { from: new Vector3(1, 0, 0), to: new Vector3(0, 0, 1), progress: 0.9, duration: 1, flash: 0 }
+    const ex: Exchange = { from: new Vector3(1, 0, 0), to: new Vector3(0, 0, 1), bloc: 0, progress: 0.9, duration: 1, flash: 0 }
     expect(stepExchange(ex, 0.05)).toBe(false)
     expect(stepExchange(ex, 0.2)).toBe(true) // crosses 1
     expect(stepExchange(ex, 0.05)).toBe(false) // now burning its flash
@@ -99,7 +117,7 @@ describe('exchanges', () => {
   })
 
   it('recycles into a new pair once the flash burns out', () => {
-    const ex: Exchange = { from: new Vector3(1, 0, 0), to: new Vector3(0, 0, 1), progress: 1, duration: 1, flash: 0.1 }
+    const ex: Exchange = { from: new Vector3(1, 0, 0), to: new Vector3(0, 0, 1), bloc: 0, progress: 1, duration: 1, flash: 0.1 }
     stepExchange(ex, 0.2)
     expect(ex.flash).toBeLessThanOrEqual(0)
     expect(ex.progress).toBeLessThanOrEqual(0) // waiting to launch again

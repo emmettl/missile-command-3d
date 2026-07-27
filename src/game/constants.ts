@@ -91,7 +91,7 @@ export function slbmWarningDue(wave: number, spawnedThisWave: number, toSpawn: n
 // surface rather than a line.
 export const SEA = {
   minX: -104,
-  maxX: -38, // nearest a submarine dares come to the coast
+  maxX: -50, // nearest a submarine dares come to the coast
   halfDepth: 12, // z spread
 }
 
@@ -105,19 +105,19 @@ export const SUBS_MAX = 5
 // A submarine's cycle: it runs deep and untouchable, surfaces to shoot, then dives and
 // relocates. The exposed window is the whole game of the mode — it is the only time the
 // boat can be killed, and killing it takes the rest of its salvo out of the wave.
-export const SUB_SUBMERGED_TIME = [3.5, 6.5] as const // random hold before surfacing
+export const SUB_SUBMERGED_TIME = [5, 8.5] as const // random hold before surfacing
 export const SUB_SURFACING_TIME = 1.1
 export const SUB_DIVING_TIME = 1.1
 export const SUB_SALVO = [2, 3] as const // missiles per surfacing
-export const SUB_SALVO_INTERVAL = 1.15
+export const SUB_SALVO_INTERVAL = 1.6
 export const SUB_HULL_LENGTH = 7.5
 export const SUB_KILL_SCORE = 300
 
 // Ballistic arcs. Apex is a fraction of ground track, floored so even a short lob
 // climbs into the sky, and the whole flight is slower than a classic dive — you can
 // see it coming, the difficulty is judging where it will be, not whether you noticed.
-export const SLBM_SPEED = 15 // units/second along the ground track at wave 1
-export const SLBM_SPEED_PER_WAVE = 0.9
+export const SLBM_SPEED = 9 // units/second along the ground track at wave 1
+export const SLBM_SPEED_PER_WAVE = 0.35
 export const SLBM_APEX_RATIO = 0.42
 export const SLBM_APEX_MIN = 22
 export const SLBM_APEX_MAX = 52
@@ -134,7 +134,7 @@ export function subCountForWave(wave: number): number {
 // Weapons available in the mode. The interceptor is the familiar counter-missile, but
 // it lobs too, so it has to be aimed where the warhead is going.
 export const INTERCEPTOR_ARC_RATIO = 0.3 // apex as a fraction of range
-export const INTERCEPTOR_ARC_SPEED = 30 // slower than the classic straight shot
+export const INTERCEPTOR_ARC_SPEED = 34 // slower than the classic straight shot
 
 // Flak: a cheap cloud that hangs in the air and kills whatever flies into it. Wide and
 // patient rather than precise — and useless against smart bombs, which steer around any
@@ -150,7 +150,7 @@ export const FLAK_SPEED = 46
 // only ever kills what is on the surface, so it is worth nothing unless a boat has
 // committed to a launch.
 export const SUB_STRIKE_ROUNDS = 3 // per SLBM wave
-export const SUB_STRIKE_SPEED = 26
+export const SUB_STRIKE_SPEED = 32
 export const SUB_STRIKE_RADIUS = 7.5
 
 // A reserve city is earned each time the score crosses a multiple of this, and is
@@ -177,8 +177,10 @@ export function missileCountForWave(wave: number): number {
 }
 
 export function slbmCountForWave(wave: number): number {
-  // Fewer bodies than a classic wave, because each one takes far longer to arrive.
-  return 6 + wave
+  // Grows faster than the classic count, because the warheads have been slowed down and
+  // the wave would otherwise be over before a player had worked out what they are
+  // looking at. See slbmPacing.test.ts, which measures what these numbers add up to.
+  return Math.floor(9 + wave * 1.5)
 }
 
 // Palette

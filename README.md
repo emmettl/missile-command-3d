@@ -25,7 +25,8 @@ npm run build    # type-check + production build
 - **Click anywhere** to fire a counter-missile from your nearest battery.
 - Press **START** on the globe intro — the camera dives into your city and the battle begins.
   Leave it alone and the globe keeps turning under a nuclear exchange tracing great circles
-  between real cities; a finished game returns here on its own.
+  between real cities, each launch in its bloc's colours and never aimed at its own side;
+  a finished game returns here on its own.
 - The missile flies to the click point and detonates into an expanding blast.
 - Any incoming warhead caught in a blast is destroyed — blasts chain-react.
 - Watch for **MIRVs** (orange, wave 2+) that split into several warheads, and **smart bombs**
@@ -45,7 +46,10 @@ water receding away to the left.
   procedurally but deterministically (`game/coastline.ts`), so the shore is in the same
   place every wave and every session.
 - Missile submarines hold station out at sea, hidden except for a **sonar return** on the
-  water. They surface to fire, launching warheads on long, high **ballistic arcs**.
+  water. They surface to fire, launching warheads on long, high **ballistic arcs** — slow
+  enough to watch, since the difficulty is meant to be judging where one will be rather
+  than noticing it at all. `game/slbmPacing.test.ts` simulates a whole wave and holds that
+  pacing to account: how long the wave runs, and how long each warhead is in the air.
 - A surfaced boat is the only killable one, and only for the few seconds it is up.
 - **1 INTERCEPT** — your counter-missile lobs out here, so you have to aim where the
   warhead is *going*, not where it is.

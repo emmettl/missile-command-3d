@@ -8,9 +8,17 @@ import type { WaveMode } from '../game/types'
 // a box sized to sit behind whatever the camera is framing. Seen from the offshore
 // view, the classic box would sit off to one side as a visible clump of points in the
 // middle of the ocean — so each mode gets its own.
-const BOX: Record<WaveMode, { width: number; height: number; centerX: number; depth: number }> = {
-  classic: { width: 90, height: 45, centerX: 0, depth: 40 },
-  slbm: { width: 240, height: 100, centerX: -40, depth: 110 },
+//
+// `baseY` is the one that matters offshore. A star clears the horizon only if it is
+// higher than the camera itself, and that camera rides high and looks down at the water
+// — so a box starting near ground level scatters stars across the sea in the middle of
+// the frame, which is precisely where sky is not.
+const BOX: Record<
+  WaveMode,
+  { width: number; height: number; baseY: number; centerX: number; depth: number }
+> = {
+  classic: { width: 90, height: 45, baseY: -2, centerX: 0, depth: 40 },
+  slbm: { width: 420, height: 150, baseY: 95, centerX: -30, depth: 230 },
 }
 
 export function Starfield({
@@ -27,7 +35,7 @@ export function Starfield({
     const pos = new Float32Array(count * 3)
     for (let i = 0; i < count; i++) {
       pos[i * 3 + 0] = box.centerX + (Math.random() - 0.5) * box.width
-      pos[i * 3 + 1] = Math.random() * box.height - 2
+      pos[i * 3 + 1] = box.baseY + Math.random() * box.height
       pos[i * 3 + 2] = -10 - Math.random() * box.depth
     }
     g.setAttribute('position', new Float32BufferAttribute(pos, 3))

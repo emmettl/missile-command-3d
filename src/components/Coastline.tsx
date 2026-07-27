@@ -43,7 +43,7 @@ const CONTOUR_OPACITY = [0.3, 0.2, 0.12]
 const SHORE_OPACITY = 0.95
 const ISLAND_OPACITY = 0.7
 const GLOW_STRENGTH = 0.62
-const SEA_OPACITY = 0.66
+const SEA_OPACITY = 0.86
 const FADE_IN = 1.1 // seconds, roughly the length of the camera's swing
 
 function lineGeometry(points: CoastPoint[]): BufferGeometry {

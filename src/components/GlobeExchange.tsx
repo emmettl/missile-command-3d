@@ -14,6 +14,7 @@ import { COLORS } from '../game/constants'
 import { quality } from '../game/device'
 import {
   ARC_SEGMENTS,
+  BLOC_COLORS,
   type Exchange,
   arcPoint,
   inFlight,
@@ -36,6 +37,8 @@ interface Flight {
   line: LineBasicMaterial
   head: MeshBasicMaterial
   flash: MeshBasicMaterial
+  /** The bloc the materials are currently painted for; -1 until first set. */
+  painted: number
 }
 
 export function GlobeExchange({ radius }: { radius: number }) {
@@ -53,6 +56,7 @@ export function GlobeExchange({ radius }: { radius: number }) {
           ex: newExchange(),
           geometry,
           positions,
+          painted: -1,
           line: new LineBasicMaterial({
             color: COLORS.enemy,
             transparent: true,
@@ -79,6 +83,15 @@ export function GlobeExchange({ radius }: { radius: number }) {
       stepExchange(f.ex, dt)
       const head = heads.current[i]
       const flash = flashes.current[i]
+
+      // Flights recycle into a new pair of cities, which may be a different bloc, so the
+      // colours are repainted when — and only when — the hand changes.
+      if (f.painted !== f.ex.bloc) {
+        f.painted = f.ex.bloc
+        const colour = BLOC_COLORS[f.ex.bloc % BLOC_COLORS.length]
+        f.line.color.set(colour)
+        f.head.color.set(colour)
+      }
 
       if (inFlight(f.ex)) {
         // Rewrite the flown portion of the trail. The whole path is known, so this is

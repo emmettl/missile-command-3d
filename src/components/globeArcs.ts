@@ -5,31 +5,42 @@ import { latLonDir } from './earth'
 // places while the globe turns. Nobody is playing, so this is pure theatre — but it is
 // the theatre that says what the game is before you have pressed anything.
 
-/** Real places, so the exchange traces routes that look like routes. */
-const SITES: [number, number][] = [
-  [40.7, -74.0], // New York
-  [34.0, -118.2], // Los Angeles
-  [51.5, -0.1], // London
-  [48.9, 2.4], // Paris
-  [52.5, 13.4], // Berlin
-  [55.8, 37.6], // Moscow
-  [55.0, 82.9], // Novosibirsk
-  [39.9, 116.4], // Beijing
-  [35.7, 139.7], // Tokyo
-  [28.6, 77.2], // Delhi
-  [-33.9, 151.2], // Sydney
-  [-23.5, -46.6], // São Paulo
-  [-33.9, 18.4], // Cape Town
-  [45.4, -75.7], // Ottawa
-  [37.6, 126.9], // Seoul
-  [19.4, -99.1], // Mexico City
+/**
+ * Real places, grouped into blocs. The bloc decides the colour of everything that leaves
+ * a city, so a launch site always fires in the same hand — which is what makes a screen
+ * full of arcs read as sides in a war rather than as confetti.
+ */
+const SITES: [lat: number, lon: number, bloc: number][] = [
+  [40.7, -74.0, 0], // New York
+  [34.0, -118.2, 0], // Los Angeles
+  [45.4, -75.7, 0], // Ottawa
+  [19.4, -99.1, 0], // Mexico City
+  [-23.5, -46.6, 0], // São Paulo
+  [51.5, -0.1, 1], // London
+  [48.9, 2.4, 1], // Paris
+  [52.5, 13.4, 1], // Berlin
+  [-33.9, 18.4, 1], // Cape Town
+  [55.8, 37.6, 2], // Moscow
+  [55.0, 82.9, 2], // Novosibirsk
+  [39.9, 116.4, 3], // Beijing
+  [35.7, 139.7, 3], // Tokyo
+  [28.6, 77.2, 3], // Delhi
+  [37.6, 126.9, 3], // Seoul
+  [-33.9, 151.2, 3], // Sydney
 ]
 
 const DIRS = SITES.map(([lat, lon]) => latLonDir(lat, lon))
+const BLOCS = SITES.map(([, , bloc]) => bloc)
+
+/** One hue per bloc. */
+export const BLOC_COLORS = ['#ff5a5a', '#9be08f', '#ff9d3c', '#e05dff'] as const
+export const BLOC_COUNT = BLOC_COLORS.length
 
 export interface Exchange {
   from: Vector3
   to: Vector3
+  /** Whose missile this is — indexes BLOC_COLORS. */
+  bloc: number
   /** 0..1 along the arc; negative while the launcher waits its turn. */
   progress: number
   /** Seconds the whole flight takes. */
@@ -88,14 +99,20 @@ export function arcPoint(
   return out.multiplyScalar(radius * (1 + ARC_LIFT * reach * Math.sin(Math.PI * t)))
 }
 
-/** A fresh exchange between two different places, staggered so they don't all fly at once. */
+/**
+ * A fresh exchange, staggered so they don't all fly at once. The target is always in
+ * someone else's bloc — nobody is nuking their own capital, and it guarantees the arc
+ * lands somewhere a different colour from where it left.
+ */
 export function newExchange(rng: Rng = Math.random): Exchange {
-  const a = Math.floor(rng() * DIRS.length)
-  let b = Math.floor(rng() * DIRS.length)
-  if (b === a) b = (b + 1 + Math.floor(rng() * (DIRS.length - 1))) % DIRS.length
+  const a = Math.floor(rng() * DIRS.length) % DIRS.length
+  const enemies: number[] = []
+  for (let i = 0; i < DIRS.length; i++) if (BLOCS[i] !== BLOCS[a]) enemies.push(i)
+  const b = enemies[Math.floor(rng() * enemies.length) % enemies.length]
   return {
     from: DIRS[a],
     to: DIRS[b],
+    bloc: BLOCS[a],
     progress: -rng() * 6, // waiting to launch
     duration: 3.4 + rng() * 3.6,
     flash: 0,
@@ -120,6 +137,12 @@ export function stepExchange(ex: Exchange, dt: number, rng: Rng = Math.random): 
     return true
   }
   return false
+}
+
+/** The bloc a launch site belongs to, or -1 for a direction that is not one. */
+export function blocOf(dir: Vector3): number {
+  const i = DIRS.indexOf(dir)
+  return i < 0 ? -1 : BLOCS[i]
 }
 
 /** In flight — before this it is still on the pad, after it has already landed. */
