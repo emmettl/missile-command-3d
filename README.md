@@ -55,7 +55,10 @@ water receding away to the left.
 - **zustand 5** for game state; a single `useFrame` loop (`components/GameLoop.tsx`) runs the simulation
 - **Bloom** post-processing (`@react-three/postprocessing`) makes every emissive element glow
 - Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**,
-  self-hosted (`src/fonts/`, SIL OFL) so the page makes no third-party requests
+  self-hosted (`src/fonts/`, SIL OFL) so the page makes no third-party requests — shipped
+  twice, as `.woff2` for the stylesheet and `.woff` for the in-scene text, because troika
+  (behind drei's `<Text>`) converts wOFF but throws on wOF2, and left to itself would
+  fetch a font from a CDN on every play
 - Intro globe outlines the **real Earth** — Natural Earth coastlines (`world-atlas`) projected
   onto the sphere as glowing lines; the defended city is pinned to actual land
 - **oxlint** for linting, **vitest** for the game-logic tests — both gated in CI
