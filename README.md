@@ -51,6 +51,10 @@ npm run build    # type-check + production build
   pixel ratio, so a maximised window on a dense laptop panel would otherwise ask for
   four times the frame integrated graphics can fill. The ratio is re-derived whenever
   the window resizes or changes display
+- That budget is only an opening guess at the GPU, so measured frame rate has the last
+  word: `components/AdaptiveRenderScale.tsx` (drei's `PerformanceMonitor`) walks the
+  ratio down towards a 0.6 floor on a machine that drops frames, or back up to the
+  display's native ratio on one that never needed the help
 
 ## Structure
 

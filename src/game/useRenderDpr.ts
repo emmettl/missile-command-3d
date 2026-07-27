@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { isMobile } from './device'
-import { resolveRenderDpr } from './renderScale'
+import { dprForFactor, resolveRenderBounds, type RenderScaleBounds } from './renderScale'
 
 // The pixel ratio the canvas renders at, kept in step with the window.
 //
@@ -9,9 +9,9 @@ import { resolveRenderDpr } from './renderScale'
 // currently is, and a window that gets maximised (or dragged onto a 4K display) is
 // exactly the case that needs the ratio pulled down.
 
-function currentRenderDpr(): number {
-  if (typeof window === 'undefined') return 1
-  return resolveRenderDpr({
+function readBounds(): RenderScaleBounds {
+  if (typeof window === 'undefined') return { cap: 1, top: 1 }
+  return resolveRenderBounds({
     width: window.innerWidth,
     height: window.innerHeight,
     devicePixelRatio: window.devicePixelRatio,
@@ -19,17 +19,25 @@ function currentRenderDpr(): number {
   })
 }
 
-export function useRenderDpr(): number {
-  const [dpr, setDpr] = useState(currentRenderDpr)
+/**
+ * @param factor Measured performance in 0..1 from `AdaptiveRenderScale`. The midpoint
+ * is the budget's own guess, which is where rendering starts.
+ */
+export function useRenderDpr(factor: number): number {
+  const [bounds, setBounds] = useState(readBounds)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
     let ratioQuery: MediaQueryList | undefined
 
     function update() {
-      // Quantised, so this settles on the same number for most resize events and
-      // React bails out of the re-render — no need to debounce the listener.
-      setDpr(currentRenderDpr())
+      // Bounds are quantised, so most resize events resolve to the numbers already in
+      // state; returning the previous object bails out of the re-render and keeps the
+      // renderer from reallocating buffers on every pixel of a window drag.
+      setBounds((prev) => {
+        const next = readBounds()
+        return prev.cap === next.cap && prev.top === next.top ? prev : next
+      })
     }
 
     // Page zoom, and dragging the window onto a display of a different density, change
@@ -57,5 +65,5 @@ export function useRenderDpr(): number {
     }
   }, [])
 
-  return dpr
+  return dprForFactor(bounds, factor)
 }

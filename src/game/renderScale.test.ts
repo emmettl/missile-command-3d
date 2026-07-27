@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { DPR_CEILING, DPR_FLOOR, PIXEL_BUDGET, resolveRenderDpr } from './renderScale'
+import {
+  DPR_CEILING,
+  DPR_FLOOR,
+  PIXEL_BUDGET,
+  START_FACTOR,
+  dprForFactor,
+  resolveRenderBounds,
+  resolveRenderDpr,
+} from './renderScale'
 
 // Device pixels a frame actually costs at the resolved ratio.
 function framePixels(width: number, height: number, devicePixelRatio: number, mobile = false) {
@@ -93,5 +101,61 @@ describe('resolveRenderDpr', () => {
       expect(dpr).toBeGreaterThanOrEqual(DPR_FLOOR)
       expect(dpr).toBeLessThanOrEqual(DPR_CEILING.desktop)
     }
+  })
+})
+
+// The reported machine: a 5K panel at 200% Windows scaling — 2560x1440 CSS at 2x.
+const STUDIO_DISPLAY = { width: 2560, height: 1440, devicePixelRatio: 2 }
+
+describe('dprForFactor', () => {
+  const bounds = resolveRenderBounds(STUDIO_DISPLAY)
+
+  it('starts at the budget cap, before anything has been measured', () => {
+    expect(dprForFactor(bounds, START_FACTOR)).toBe(bounds.cap)
+    expect(bounds.cap).toBeLessThan(bounds.top) // this window has room to climb
+  })
+
+  it('climbs to the display’s own ratio when the GPU proves it can keep up', () => {
+    expect(dprForFactor(bounds, 1)).toBe(bounds.top)
+    expect(bounds.top).toBe(2)
+  })
+
+  it('gives ground to the floor when the GPU cannot', () => {
+    expect(dprForFactor(bounds, 0)).toBe(DPR_FLOOR)
+  })
+
+  it('moves monotonically, and never outside the bounds', () => {
+    let previous = 0
+    for (let factor = 0; factor <= 1.0001; factor += 0.05) {
+      const dpr = dprForFactor(bounds, factor)
+      expect(dpr).toBeGreaterThanOrEqual(previous)
+      expect(dpr).toBeGreaterThanOrEqual(DPR_FLOOR)
+      expect(dpr).toBeLessThanOrEqual(bounds.top)
+      previous = dpr
+    }
+  })
+
+  it('never renders past the display on a window the budget never bound', () => {
+    // A small window is already at its native ratio, so there is nothing to climb to.
+    const small = resolveRenderBounds({ width: 900, height: 600, devicePixelRatio: 1 })
+    expect(small.cap).toBe(small.top)
+    expect(dprForFactor(small, 1)).toBe(1)
+    expect(dprForFactor(small, 0)).toBe(DPR_FLOOR)
+  })
+
+  it('holds a phone to the mobile ceiling however well it performs', () => {
+    const phone = resolveRenderBounds({
+      width: 390,
+      height: 844,
+      devicePixelRatio: 3,
+      mobile: true,
+    })
+    expect(dprForFactor(phone, 1)).toBe(DPR_CEILING.mobile)
+  })
+
+  it('falls back to the opening guess on a factor it cannot read', () => {
+    expect(dprForFactor(bounds, Number.NaN)).toBe(bounds.cap)
+    expect(dprForFactor(bounds, -5)).toBe(DPR_FLOOR)
+    expect(dprForFactor(bounds, 99)).toBe(bounds.top)
   })
 })

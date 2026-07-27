@@ -8,10 +8,16 @@
 // difference between a smooth 60fps and a slideshow — and it is why the game can feel
 // fine in a small window and crawl once that same window is pulled out to full screen.
 //
-// So `devicePixelRatio` is treated as a request, not an instruction. The canvas renders
-// at the highest ratio that keeps a frame inside a fixed pixel budget, and the browser
+// So `devicePixelRatio` is treated as a request, not an instruction. The canvas opens at
+// the highest ratio that keeps a frame inside a fixed pixel budget, and the browser
 // scales the result up to fill the window. A neon scene under heavy bloom hides the
 // softening well; dropped frames are far more noticeable than slightly softer edges.
+//
+// The budget is only a guess at the GPU, though, and a wrong guess costs either frames
+// or sharpness. So it is the opening bid rather than the last word: once frames are
+// actually being measured (see components/AdaptiveRenderScale.tsx) the ratio walks down
+// towards DPR_FLOOR on a machine that can't keep up, or back up towards the display's
+// native ratio on one that was never the problem.
 
 /**
  * Device pixels the renderer may shade per frame. ~2.6M sits between 1080p (2.07M) and
@@ -51,16 +57,28 @@ function quantise(dpr: number): number {
   return Number((Math.round(dpr / DPR_STEP) * DPR_STEP).toFixed(2))
 }
 
+function clamp(n: number, low: number, high: number): number {
+  return Math.min(Math.max(n, low), high)
+}
+
+export interface RenderScaleBounds {
+  /** Where rendering starts: the most the pixel budget affords at this window size. */
+  cap: number
+  /** The most this display could ever want — its own ratio, held to the ceiling. */
+  top: number
+}
+
 /**
- * The pixel ratio to render this viewport at: the display's own ratio, capped by the
- * ceiling and by whatever the pixel budget affords at this window size.
+ * The range the renderer may move within on this viewport, from the budget's opening
+ * guess up to what the display actually asks for. The budget is only a guess at what
+ * the GPU can fill; measured frame rate decides where in the range to settle.
  */
-export function resolveRenderDpr({
+export function resolveRenderBounds({
   width,
   height,
   devicePixelRatio,
   mobile = false,
-}: ViewportMetrics): number {
+}: ViewportMetrics): RenderScaleBounds {
   const ceiling = mobile ? DPR_CEILING.mobile : DPR_CEILING.desktop
   const requested =
     Number.isFinite(devicePixelRatio) && devicePixelRatio > 0 ? devicePixelRatio : 1
@@ -72,6 +90,37 @@ export function resolveRenderDpr({
   const affordable =
     Number.isFinite(area) && area > 0 ? Math.sqrt(PIXEL_BUDGET / area) : requested
 
-  const dpr = Math.min(requested, ceiling, affordable)
-  return quantise(Math.min(Math.max(dpr, DPR_FLOOR), ceiling))
+  const cap = quantise(clamp(Math.min(requested, ceiling, affordable), DPR_FLOOR, ceiling))
+  return { cap, top: Math.max(quantise(Math.min(requested, ceiling)), cap) }
+}
+
+/**
+ * The pixel ratio to render this viewport at before any measurement: the display's own
+ * ratio, capped by the ceiling and by whatever the pixel budget affords here.
+ */
+export function resolveRenderDpr(metrics: ViewportMetrics): number {
+  return resolveRenderBounds(metrics).cap
+}
+
+/**
+ * Where the ladder starts. Matches drei's `PerformanceMonitor` initial factor, so the
+ * first frame is drawn at the budget cap and measurement moves out from there.
+ */
+export const START_FACTOR = 0.5
+
+/**
+ * Turn a measured performance factor into a pixel ratio. The factor arrives from
+ * `PerformanceMonitor` in 0..1, and the midpoint is the budget's opening guess: above
+ * it the machine has shown headroom and earns its way back up towards the display's
+ * native ratio, below it the machine is dropping frames and gives ground down to the
+ * floor. Rendering sharper than `cap` is only ever the result of measurement, never an
+ * assumption.
+ */
+export function dprForFactor({ cap, top }: RenderScaleBounds, factor: number): number {
+  const t = clamp(Number.isFinite(factor) ? factor : START_FACTOR, 0, 1)
+  const dpr =
+    t >= START_FACTOR
+      ? cap + (top - cap) * ((t - START_FACTOR) / (1 - START_FACTOR))
+      : DPR_FLOOR + (cap - DPR_FLOOR) * (t / START_FACTOR)
+  return quantise(clamp(dpr, DPR_FLOOR, top))
 }
