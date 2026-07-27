@@ -7,7 +7,7 @@ import { AdaptiveRenderScale } from './components/AdaptiveRenderScale'
 import { HUD } from './ui/HUD'
 import { Overlay } from './ui/Overlay'
 import { IntroOverlay } from './ui/IntroOverlay'
-import { BonusToast, FlashOverlay, WaveBanner } from './ui/GameBanners'
+import { BonusToast, FlashOverlay, SlbmWarning, WaveBanner } from './ui/GameBanners'
 import { WeaponBar } from './ui/WeaponBar'
 import { RotateHint } from './ui/RotateHint'
 import { isMobile, quality } from './game/device'
@@ -48,6 +48,7 @@ export default function App() {
       <IntroOverlay />
       <Overlay />
       <WaveBanner />
+      <SlbmWarning />
       <BonusToast />
       <FlashOverlay />
       <RotateHint />

@@ -7,6 +7,7 @@ import { useGameStore } from '../game/useGameStore'
 import { stepShake } from '../game/shake'
 import { unlockAudio, Sfx } from '../game/audio'
 import { CAMERA_FOV, CameraFit, computeCameraFit, framedBox } from './cameraFit'
+import { Coastline } from './Coastline'
 import { SubmarineView } from './Submarine'
 import { ReflectiveFloor } from './ReflectiveFloor'
 import { GridFloor } from './GridFloor'
@@ -199,6 +200,7 @@ export function Scene() {
         <PlainFloor distance={fit.distance} />
       )}
       <GridFloor distance={fit.distance} mode={mode} />
+      {mode === 'slbm' && <Coastline />}
 
       {cities.map((c) => (
         <City key={c.id} city={c} />

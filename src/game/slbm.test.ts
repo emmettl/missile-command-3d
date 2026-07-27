@@ -8,6 +8,7 @@ import {
   SUB_SALVO_INTERVAL,
   SUB_SURFACING_TIME,
   modeForWave,
+  slbmWarningDue,
   subCountForWave,
 } from './constants'
 import {
@@ -43,6 +44,23 @@ describe('modeForWave', () => {
       'classic',
       'slbm',
     ])
+  })
+
+  it('warns through the tail of the wave before an attack, and only then', () => {
+    // Wave 2 leads into the first SLBM wave; warn once it has nothing left to launch.
+    expect(slbmWarningDue(2, 12, 12)).toBe(true)
+    expect(slbmWarningDue(2, 13, 12)).toBe(true) // stragglers still in the air
+    expect(slbmWarningDue(2, 5, 12)).toBe(false) // still mid-fight
+    // Wave 1 is two waves out — too early to be shouting about it.
+    expect(slbmWarningDue(1, 10, 10)).toBe(false)
+    // ...and never during the attack itself.
+    expect(slbmWarningDue(3, 9, 9)).toBe(false)
+    expect(slbmWarningDue(5, 18, 18)).toBe(true) // wave 6 is offshore
+    expect(slbmWarningDue(4, 16, 16)).toBe(false)
+  })
+
+  it('does not warn before a wave has been set up', () => {
+    expect(slbmWarningDue(2, 0, 0)).toBe(false)
   })
 
   it('sends more boats as the waves climb, up to a limit', () => {

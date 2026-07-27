@@ -76,6 +76,16 @@ export function modeForWave(wave: number): 'classic' | 'slbm' {
   return wave >= SLBM_FIRST_WAVE && wave % SLBM_WAVE_INTERVAL === 0 ? 'slbm' : 'classic'
 }
 
+/**
+ * Whether to warn that the next wave is an SLBM attack. Held back until the wave has
+ * launched everything it is going to — the warning is for the lull while you shoot down
+ * the stragglers, so it lands as a red horizon rather than as noise over a fight.
+ */
+export function slbmWarningDue(wave: number, spawnedThisWave: number, toSpawn: number): boolean {
+  if (modeForWave(wave) === 'slbm' || modeForWave(wave + 1) !== 'slbm') return false
+  return toSpawn > 0 && spawnedThisWave >= toSpawn
+}
+
 // The ocean: a band of open water off the left edge of the coast. Submarines hold
 // station anywhere in it, spread through z as well as x so the water reads as a
 // surface rather than a line.
@@ -173,6 +183,9 @@ export function slbmCountForWave(wave: number): number {
 
 // Palette
 export const COLORS = {
+  coast: '#57c8a8',
+  land: '#050b14',
+  contour: '#2f7d8a',
   sub: '#8fe0d0',
   subHull: '#16323c',
   subPing: '#2f7d74',

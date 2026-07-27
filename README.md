@@ -36,6 +36,11 @@ Every third wave from the third, the war moves offshore and the camera swings ro
 oblique view of the ocean — the coast compressed against the right of the screen, open
 water receding away to the left.
 
+- The tail of the wave before carries a red **SLBM ATTACK INCOMING** warning, so the mode
+  change is something you see coming rather than something that happens to you.
+- The water is charted: a **vector coastline** with depth contours and islands, generated
+  procedurally but deterministically (`game/coastline.ts`), so the shore is in the same
+  place every wave and every session. Land is filled, sea keeps the grid.
 - Missile submarines hold station out at sea, hidden except for a **sonar return** on the
   water. They surface to fire, launching warheads on long, high **ballistic arcs**.
 - A surfaced boat is the only killable one, and only for the few seconds it is up.

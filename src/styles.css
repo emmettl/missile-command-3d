@@ -378,6 +378,66 @@ h1.danger {
   opacity: 0.85;
 }
 
+/* ---------- SLBM incoming warning (the wave before) ---------- */
+.slbm-warning {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  text-align: center;
+  pointer-events: none;
+  animation: warnIn 0.35s ease-out;
+}
+
+.sw-title {
+  font-family: var(--pixel);
+  font-size: clamp(12px, 2.1vw, 22px);
+  color: var(--red);
+  letter-spacing: 3px;
+  text-shadow: 0 0 18px rgba(255, 90, 90, 0.75);
+  animation: warnPulse 1.15s ease-in-out infinite;
+}
+
+.sw-sub {
+  font-family: var(--pixel);
+  font-size: clamp(8px, 1.1vw, 11px);
+  color: #ffb0b0;
+  margin-top: 9px;
+  letter-spacing: 2px;
+  opacity: 0.8;
+}
+
+@keyframes warnPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes warnIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* Users who would rather not have things flashing at them get a steady warning. */
+@media (prefers-reduced-motion: reduce) {
+  .sw-title {
+    animation: none;
+  }
+  .slbm-warning {
+    animation: none;
+  }
+}
+
 /* ---------- Weapon selector (SLBM waves) ---------- */
 .weapon-bar {
   position: absolute;
