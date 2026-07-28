@@ -176,6 +176,15 @@ export const SUB_SURFACING_TIME = 1.1
 export const SUB_DIVING_TIME = 1.1
 export const SUB_SALVO = [2, 3] as const // missiles per surfacing
 export const SUB_SALVO_INTERVAL = 1.6
+/**
+ * A beat on the surface after the last launch, before the boat dives.
+ *
+ * Without it the salvo's final missile and the start of the dive were the same instant,
+ * so the moment the wave *tells* you a boat is up — the bar's prompt, the hull on the
+ * water — was already the moment it was leaving. A strike thrown at that had to have been
+ * in the air before the cue appeared.
+ */
+export const SUB_SURFACED_HOLD = 0.9
 export const SUB_HULL_LENGTH = 7.5
 export const SUB_KILL_SCORE = 300
 
@@ -200,7 +209,18 @@ export function subCountForWave(wave: number): number {
 // Weapons available in the mode. The interceptor is the familiar counter-missile, but
 // it lobs too, so it has to be aimed where the warhead is going.
 export const INTERCEPTOR_ARC_RATIO = 0.3 // apex as a fraction of range
-export const INTERCEPTOR_ARC_SPEED = 34 // slower than the classic straight shot
+/**
+ * Faster than the classic straight shot, not slower — which is the opposite of where this
+ * started, and the reason the mode played as unfairly hard as it did.
+ *
+ * The offshore theatre is about three times the size of the classic playfield, so the same
+ * shot covers three times the ground; giving it a *lower* speed on top of that put the
+ * counter-missile in the air long enough for a warhead to move nearly four blast radii
+ * while it flew. Aiming straight at a target was a guaranteed miss and the lead that would
+ * have connected had a tolerance of about a quarter of itself. `slbmPacing.test.ts`
+ * measures that lead against the blast, which is what the number is really set by.
+ */
+export const INTERCEPTOR_ARC_SPEED = 66
 
 // Flak: a cheap cloud that hangs in the air and kills whatever flies into it. Wide and
 // patient rather than precise — and useless against smart bombs, which steer around any
@@ -216,7 +236,14 @@ export const FLAK_SPEED = 46
 // only ever kills what is on the surface, so it is worth nothing unless a boat has
 // committed to a launch.
 export const SUB_STRIKE_ROUNDS = 3 // per SLBM wave
-export const SUB_STRIKE_SPEED = 32
+/**
+ * Fast enough to reach the far corner of the sea inside a boat's exposed window with time
+ * to spare for a player to have noticed and aimed. At 32 the longest run took 2.6 seconds
+ * against a window as short as 3.3, which left less slack than a human reaction — the far
+ * boats could not be hit at all, however well you read them. `slbmPacing.test.ts` measures
+ * that slack rather than trusting this number.
+ */
+export const SUB_STRIKE_SPEED = 56
 export const SUB_STRIKE_RADIUS = 7.5
 
 // A reserve city is earned each time the score crosses a multiple of this, and is

@@ -239,7 +239,7 @@ export function Scene() {
       <hemisphereLight args={['#33406a', '#0a0d18', 0.5]} />
       <directionalLight position={[10, 30, 20]} intensity={0.6} />
 
-      <Starfield mode={mode} />
+      <Starfield />
       {quality.reflections ? (
         <ReflectiveFloor distance={fit.distance} />
       ) : (

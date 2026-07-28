@@ -70,13 +70,20 @@ water receding away to the left.
   enough to watch, since the difficulty is meant to be judging where one will be rather
   than noticing it at all. `game/slbmPacing.test.ts` simulates a whole wave and holds that
   pacing to account: how long the wave runs, and how long each warhead is in the air.
-- A surfaced boat is the only killable one, and only for the few seconds it is up.
+- A surfaced boat is the only killable one, and only for the few seconds it is up — it
+  holds on the surface a beat after its last launch, so the moment you are *told* it is
+  there is not already the moment it is leaving.
 - **1 INTERCEPT** — your counter-missile lobs out here, so you have to aim where the
-  warhead is *going*, not where it is.
+  warhead is *going*, not where it is. How far ahead that is, is not a taste question:
+  `slbmPacing.test.ts` measures the lead in blast radii, and holds it to a couple — far
+  enough that leading is the skill, close enough that a rough one still connects.
 - **2 FLAK** — a burst that hangs in the sky for a few seconds killing whatever flies into
   it. Good for fencing off a corridor; smart bombs steer around it.
 - **3 STRIKE** — thrown at a point on the water rather than the sky. Sinks a surfaced boat,
-  and takes the rest of its salvo out of the wave with it.
+  and takes the rest of its salvo out of the wave with it. The same test measures the
+  slack: how much of a boat's exposed window is left once the torpedo's own run out to
+  the far corner of the sea is paid for. It used to be less than a human reaction, which
+  is why the far boats could not be sunk at all.
 
 The bar sits at the edge of vision while the fight is in the middle of the screen, so a
 weapon you have never fired keeps advertising itself, and the moment a boat breaks the
@@ -94,6 +101,12 @@ surface the bar says so — the one time a strike is worth anything.
   and a vignette — aiming at a backlit tactical display rather than clean neon on black.
   The softer half of it drops out on phones, and on any machine the frame-rate monitor has
   already caught struggling
+- The **horizon** is drawn at the camera's own eye level and carried with it, which is
+  where a horizon is, and the grid and fog now reach most of the way out to it — so the
+  battlefield ends in a glow it recedes into rather than at a bright bar laid across it
+- Stars are on a **dome centred on the camera** (`components/Starfield.tsx`), so the upper
+  hemisphere *is* the sky and no camera height can scatter them over the ground. A magnitude
+  and a slight tint are baked per star, hazing out into the horizon
 - The globe's atmosphere is a **fresnel limb** plus a screen-space spill, its hue drifting
   slowly between cyan and indigo (`components/Atmosphere.tsx`), so the planet has a lit edge
   and something to fade into instead of a flat translucent shell
