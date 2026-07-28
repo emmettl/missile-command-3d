@@ -52,6 +52,15 @@ interface Framing {
   /** Slack on the solved distance. */
   margin: number
   /**
+   * Fog range, in camera distances. Classic reaches much further than the offshore view
+   * needs to: its horizon is the real one, at eye level, and the ground has to stay
+   * legible most of the way out to it or there is a band of dead black between the last
+   * grid line and the horizon glow. Offshore the fog is what hides the far edge of the
+   * sea, so it stays close.
+   */
+  fogNear: number
+  fogFar: number
+  /**
    * Solve the distance by projecting the box through the real camera basis rather than
    * with the flat formula. A head-on camera can be solved in closed form; a swung and
    * tilted one cannot — the near corner of the coast sits at half the depth of the far
@@ -74,6 +83,8 @@ const FRAMING: Record<FittedMode, Framing> = {
     cameraBase: VERTICAL_CENTER,
     rise: 0.09,
     margin: 1,
+    fogNear: 0.75,
+    fogFar: 5.5,
   },
   // A hundred units of open ocean plus the coast, seen from off to one side and from
   // high up, so the water reads as a surface with depth rather than a line the missiles
@@ -89,6 +100,8 @@ const FRAMING: Record<FittedMode, Framing> = {
     cameraBase: 29,
     rise: 0.35,
     margin: 1.04,
+    fogNear: 0.75,
+    fogFar: 3.2,
     exact: true,
   },
 }
@@ -196,8 +209,8 @@ export function computeCameraFit(aspect: number, mode: FittedMode = 'classic'): 
     yaw: f.yaw,
     centerX,
     // Fog has to track the camera, or pulling back would bury the scene in it.
-    fogNear: distance * 0.75,
-    fogFar: distance * 3.2,
+    fogNear: distance * f.fogNear,
+    fogFar: distance * f.fogFar,
   }
 }
 

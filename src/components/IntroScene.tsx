@@ -170,7 +170,7 @@ export function IntroScene() {
       <color attach="background" args={[COLORS.sky]} />
       <ambientLight intensity={0.4} />
       <directionalLight position={[8, 10, 12]} intensity={1.1} color="#bcd0ff" />
-      <Starfield count={600} />
+      <Starfield count={600} horizon={false} />
 
       {/* The wider spill, outside the globe group so the billboard is never turned by
           the planet's own rotation. */}

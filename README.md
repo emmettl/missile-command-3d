@@ -94,6 +94,12 @@ surface the bar says so — the one time a strike is worth anything.
   and a vignette — aiming at a backlit tactical display rather than clean neon on black.
   The softer half of it drops out on phones, and on any machine the frame-rate monitor has
   already caught struggling
+- The **horizon** is drawn at the camera's own eye level and carried with it, which is
+  where a horizon is, and the grid and fog now reach most of the way out to it — so the
+  battlefield ends in a glow it recedes into rather than at a bright bar laid across it
+- Stars are on a **dome centred on the camera** (`components/Starfield.tsx`), so the upper
+  hemisphere *is* the sky and no camera height can scatter them over the ground. A magnitude
+  and a slight tint are baked per star, hazing out into the horizon
 - The globe's atmosphere is a **fresnel limb** plus a screen-space spill, its hue drifting
   slowly between cyan and indigo (`components/Atmosphere.tsx`), so the planet has a lit edge
   and something to fade into instead of a flat translucent shell
