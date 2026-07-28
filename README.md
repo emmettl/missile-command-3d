@@ -72,7 +72,9 @@ water receding away to the left.
   pacing to account: how long the wave runs, and how long each warhead is in the air.
 - A surfaced boat is the only killable one, and only for the few seconds it is up.
 - **1 INTERCEPT** — your counter-missile lobs out here, so you have to aim where the
-  warhead is *going*, not where it is.
+  warhead is *going*, not where it is. How far ahead that is, is not a taste question:
+  `slbmPacing.test.ts` measures the lead in blast radii, and holds it to a couple — far
+  enough that leading is the skill, close enough that a rough one still connects.
 - **2 FLAK** — a burst that hangs in the sky for a few seconds killing whatever flies into
   it. Good for fencing off a corridor; smart bombs steer around it.
 - **3 STRIKE** — thrown at a point on the water rather than the sky. Sinks a surfaced boat,

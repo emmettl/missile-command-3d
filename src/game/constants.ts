@@ -200,7 +200,18 @@ export function subCountForWave(wave: number): number {
 // Weapons available in the mode. The interceptor is the familiar counter-missile, but
 // it lobs too, so it has to be aimed where the warhead is going.
 export const INTERCEPTOR_ARC_RATIO = 0.3 // apex as a fraction of range
-export const INTERCEPTOR_ARC_SPEED = 34 // slower than the classic straight shot
+/**
+ * Faster than the classic straight shot, not slower — which is the opposite of where this
+ * started, and the reason the mode played as unfairly hard as it did.
+ *
+ * The offshore theatre is about three times the size of the classic playfield, so the same
+ * shot covers three times the ground; giving it a *lower* speed on top of that put the
+ * counter-missile in the air long enough for a warhead to move nearly four blast radii
+ * while it flew. Aiming straight at a target was a guaranteed miss and the lead that would
+ * have connected had a tolerance of about a quarter of itself. `slbmPacing.test.ts`
+ * measures that lead against the blast, which is what the number is really set by.
+ */
+export const INTERCEPTOR_ARC_SPEED = 66
 
 // Flak: a cheap cloud that hangs in the air and kills whatever flies into it. Wide and
 // patient rather than precise — and useless against smart bombs, which steer around any

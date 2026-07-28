@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { Vector3 } from 'three'
 import {
+  BATTERIES,
+  CITIES,
+  EXPLOSION_MAX_RADIUS,
+  FIELD,
   INTERCEPTOR_ARC_RATIO,
   INTERCEPTOR_ARC_SPEED,
   SLBM_FIRST_WAVE,
   slbmCountForWave,
   subCountForWave,
 } from './constants'
-import { makeArc, newSlbm, newSubmarine, stepSubmarine } from './slbm'
+import { arcPointAt, makeArc, newSlbm, newSubmarine, stepSubmarine } from './slbm'
 import type { IncomingMissile } from './types'
 
 // How an SLBM wave actually paces, simulated rather than guessed at.
@@ -87,6 +91,61 @@ describe('SLBM pacing', () => {
   it('keeps each warhead in the air long enough to read and lead', () => {
     const shortest = Math.min(...first.flights)
     expect(shortest).toBeGreaterThan(6)
+  })
+
+  // How far ahead of a warhead you have to aim, measured in blast radii, which is the
+  // only unit in which the question means anything: a lead of one radius means aiming
+  // straight at the target still clips it, and a lead of four means the shot you would
+  // naturally take cannot possibly connect.
+  function leadInBlasts(wave: number): { median: number; worst: number } {
+    const leads: number[] = []
+    const point = (m: IncomingMissile, u: number) =>
+      arcPointAt(m.start, m.target, m.arc!.apex, u, new Vector3())
+
+    for (const draw of [0.15, 0.5, 0.85]) {
+      const sub = newSubmarine(0, 1, () => draw)
+      for (const city of CITIES) {
+        const warhead = newSlbm(wave, sub, 0, city.id)
+        // Engaged at four points along the arc, from early climb to late descent.
+        for (const u of [0.25, 0.4, 0.55, 0.7]) {
+          const at = point(warhead, u)
+          const battery = BATTERIES.reduce((a, b) =>
+            Math.abs(b.x - at.x) < Math.abs(a.x - at.x) ? b : a,
+          )
+          const counter = makeArc(
+            new Vector3(battery.x, FIELD.groundY + 0.6, 0),
+            at,
+            INTERCEPTOR_ARC_SPEED,
+            INTERCEPTOR_ARC_RATIO,
+            2,
+            26,
+          )
+          const moved = point(warhead, u + counter.duration / warhead.arc!.duration)
+          leads.push(moved.distanceTo(at) / EXPLOSION_MAX_RADIUS)
+        }
+      }
+    }
+    leads.sort((a, b) => a - b)
+    return { median: leads[leads.length >> 1], worst: leads[leads.length - 1] }
+  }
+
+  it('asks for a lead you could plausibly judge', () => {
+    // At the speed this mode shipped with, the median lead was 3.7 blast radii and the
+    // worst near seven: aiming at a warhead was a certain miss, and the aim that would
+    // have worked had to be right to within a quarter of itself. Under two radii, a
+    // shot taken straight at the target is a near miss rather than nothing, and a rough
+    // lead connects — which is the difference between judging a trajectory and guessing.
+    const { median, worst } = leadInBlasts(SLBM_FIRST_WAVE)
+    expect(median).toBeLessThan(2.2)
+    expect(worst).toBeLessThan(4.2)
+    // ...but leading is the mode. Too fast and you may as well point at the thing.
+    expect(median).toBeGreaterThan(1.2)
+  })
+
+  it('still asks for one when the warheads speed up later on', () => {
+    expect(leadInBlasts(SLBM_FIRST_WAVE * 3).median).toBeGreaterThan(
+      leadInBlasts(SLBM_FIRST_WAVE).median,
+    )
   })
 
   it('leaves room to intercept: the counter-missile is the faster of the two', () => {
