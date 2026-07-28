@@ -176,6 +176,15 @@ export const SUB_SURFACING_TIME = 1.1
 export const SUB_DIVING_TIME = 1.1
 export const SUB_SALVO = [2, 3] as const // missiles per surfacing
 export const SUB_SALVO_INTERVAL = 1.6
+/**
+ * A beat on the surface after the last launch, before the boat dives.
+ *
+ * Without it the salvo's final missile and the start of the dive were the same instant,
+ * so the moment the wave *tells* you a boat is up — the bar's prompt, the hull on the
+ * water — was already the moment it was leaving. A strike thrown at that had to have been
+ * in the air before the cue appeared.
+ */
+export const SUB_SURFACED_HOLD = 0.9
 export const SUB_HULL_LENGTH = 7.5
 export const SUB_KILL_SCORE = 300
 
@@ -227,7 +236,14 @@ export const FLAK_SPEED = 46
 // only ever kills what is on the surface, so it is worth nothing unless a boat has
 // committed to a launch.
 export const SUB_STRIKE_ROUNDS = 3 // per SLBM wave
-export const SUB_STRIKE_SPEED = 32
+/**
+ * Fast enough to reach the far corner of the sea inside a boat's exposed window with time
+ * to spare for a player to have noticed and aimed. At 32 the longest run took 2.6 seconds
+ * against a window as short as 3.3, which left less slack than a human reaction — the far
+ * boats could not be hit at all, however well you read them. `slbmPacing.test.ts` measures
+ * that slack rather than trusting this number.
+ */
+export const SUB_STRIKE_SPEED = 56
 export const SUB_STRIKE_RADIUS = 7.5
 
 // A reserve city is earned each time the score crosses a multiple of this, and is

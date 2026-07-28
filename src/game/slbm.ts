@@ -8,6 +8,7 @@ import {
   SUB_DIVING_TIME,
   SUB_SALVO,
   SUB_SALVO_INTERVAL,
+  SUB_SURFACED_HOLD,
   SUB_SUBMERGED_TIME,
   SUB_SURFACING_TIME,
   slbmSpeedForWave,
@@ -178,14 +179,20 @@ export function stepSubmarine(sub: Submarine, dt: number, rng: Rng = Math.random
       return false
 
     case 'firing': {
+      // Salvo spent: sit on the surface a moment before going down, so the cue that a
+      // boat is up does not arrive at the same instant it starts leaving.
+      if (sub.salvoLeft <= 0) {
+        if (sub.timer <= 0) {
+          sub.phase = 'diving'
+          sub.timer = SUB_DIVING_TIME
+        }
+        return false
+      }
       sub.fireTimer -= dt
       if (sub.fireTimer > 0) return false
       sub.salvoLeft -= 1
       sub.fireTimer = SUB_SALVO_INTERVAL
-      if (sub.salvoLeft <= 0) {
-        sub.phase = 'diving'
-        sub.timer = SUB_DIVING_TIME
-      }
+      if (sub.salvoLeft <= 0) sub.timer = SUB_SURFACED_HOLD
       return true
     }
 

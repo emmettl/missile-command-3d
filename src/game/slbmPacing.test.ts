@@ -7,11 +7,13 @@ import {
   FIELD,
   INTERCEPTOR_ARC_RATIO,
   INTERCEPTOR_ARC_SPEED,
+  SEA,
   SLBM_FIRST_WAVE,
+  SUB_STRIKE_SPEED,
   slbmCountForWave,
   subCountForWave,
 } from './constants'
-import { arcPointAt, makeArc, newSlbm, newSubmarine, stepSubmarine } from './slbm'
+import { arcPointAt, isExposed, makeArc, newSlbm, newSubmarine, stepSubmarine } from './slbm'
 import type { IncomingMissile } from './types'
 
 // How an SLBM wave actually paces, simulated rather than guessed at.
@@ -146,6 +148,55 @@ describe('SLBM pacing', () => {
     expect(leadInBlasts(SLBM_FIRST_WAVE * 3).median).toBeGreaterThan(
       leadInBlasts(SLBM_FIRST_WAVE).median,
     )
+  })
+
+  /**
+   * The shortest window a boat is ever killable for, stepped through the real state
+   * machine rather than worked out from the constants — which is the point, since the
+   * window is the sum of four of them and no one of them states it.
+   */
+  function shortestExposedWindow(): number {
+    // The bottom of every random range: the briefest surfacing the design allows.
+    const sub = newSubmarine(0, 1, () => 0)
+    let exposedFor = 0
+    let seen = false
+    for (let frame = 0; frame < 60 * 120; frame++) {
+      stepSubmarine(sub, STEP, () => 0)
+      if (isExposed(sub)) {
+        exposedFor += STEP
+        seen = true
+      } else if (seen) break
+    }
+    return exposedFor
+  }
+
+  /** The longest torpedo run: the far corner of the sea from the nearest battery. */
+  function longestStrikeRun(): number {
+    let longest = 0
+    for (const x of [SEA.minX, SEA.maxX]) {
+      for (const z of [-SEA.halfDepth, SEA.halfDepth]) {
+        const at = new Vector3(x, 0, z)
+        const battery = BATTERIES.reduce((a, b) =>
+          Math.abs(b.x - at.x) < Math.abs(a.x - at.x) ? b : a,
+        )
+        const start = new Vector3(battery.x, FIELD.groundY + 0.6, 0)
+        // Apex has no bearing on duration, so the arc's shape parameters do not matter.
+        longest = Math.max(longest, makeArc(start, at, SUB_STRIKE_SPEED).duration)
+      }
+    }
+    return longest
+  }
+
+  it('gives you time to actually sink a boat that surfaces', () => {
+    // The slack is what is left of the window once the torpedo's flight is paid for: the
+    // time a player has to notice the boat, choose the weapon and aim. At the speed the
+    // mode shipped with, the longest run took 2.6 seconds out of a window as short as
+    // 3.3, leaving less than a human reaction — the far boats could not be sunk at all,
+    // however well you read them. A second and a half is the floor being held here.
+    const slack = shortestExposedWindow() - longestStrikeRun()
+    expect(slack).toBeGreaterThan(1.5)
+    // And it is still a window, not an open invitation.
+    expect(shortestExposedWindow()).toBeLessThan(7)
   })
 
   it('leaves room to intercept: the counter-missile is the faster of the two', () => {
