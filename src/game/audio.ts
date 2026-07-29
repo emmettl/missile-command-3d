@@ -10,7 +10,10 @@ function ensureCtx(): AudioContext | null {
     if (!AC) return null
     ctx = new AC()
   }
-  if (ctx.state === 'suspended') void ctx.resume()
+  // Not `=== 'suspended'`. Safari reports a non-standard 'interrupted' when a call or
+  // another app takes the audio, and a check for the one state we expected meant every
+  // effect fired after an interruption quietly built its nodes into a dead context.
+  if (ctx.state !== 'running') void ctx.resume()
   return ctx
 }
 
@@ -29,6 +32,17 @@ export function unlockAudio() {
  */
 export function getAudioContext(): AudioContext | null {
   return ensureCtx()
+}
+
+/**
+ * The context if there is one, without building one.
+ *
+ * For the interruption watchdog, which runs from the moment the app mounts and must not
+ * be the thing that creates the context — one built before the player has touched the
+ * page starts suspended, and on some browsers counts against ever being allowed to run.
+ */
+export function peekAudioContext(): AudioContext | null {
+  return ctx
 }
 
 interface ToneOpts {
