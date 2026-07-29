@@ -141,6 +141,18 @@ export function setMusicEnabled(on: boolean): void {
   apply()
 }
 
+/**
+ * Have another go at whatever the current plan asks for.
+ *
+ * For the interruption watchdog. `settle` is idempotent, so on a transport that is
+ * already running this costs a comparison — but if a start failed because the context
+ * was interrupted at the time, nothing else would ever retry it: the plan has not
+ * changed, so no cue change is coming to notice.
+ */
+export function retryMusic(): void {
+  apply()
+}
+
 /** Drop the soundtrack for good. */
 export function disposeMusic(): void {
   engine?.dispose()

@@ -116,8 +116,14 @@ surface the bar says so — the one time a strike is worth anything.
   waves get harder, and the mix sweeps shut under the wave-cleared card. The engine is a
   dynamic import, so the 19 kB of it is fetched on the first click rather than on the way
   to the title screen
+- iOS takes the audio context away on a call or a backgrounding and never gives it back,
+  so `game/audioRecovery.ts` keeps asking — on visibility, on the context's own
+  `statechange`, once a second while it is still stalled, and on any tap as the backstop.
+  A single attempt lands while the context is still `interrupted` and is wasted; an
+  interruption ends when iOS decides it ends
 - Procedural **WebAudio** sound effects (no audio assets), sharing one `AudioContext` with
-  the music so there is one mix and one gesture to unlock it; 8-bit title set in **Press Start 2P**,
+  the music so there is one mix, one gesture to unlock it and one thing to bring back
+  after an interruption; 8-bit title set in **Press Start 2P**,
   self-hosted (`src/fonts/`, SIL OFL) so the page makes no third-party requests — shipped
   twice, as `.woff2` for the stylesheet and `.woff` for the in-scene text, because troika
   (behind drei's `<Text>`) converts wOFF but throws on wOF2, and left to itself would
@@ -143,7 +149,7 @@ surface the bar says so — the one time a strike is worth anything.
 ```
 src/
   game/        constants, types, zustand store, incoming (MIRV/dodge), slbm (arcs/subs),
-               bombers + gun (first-person wave), renderScale, audio, music, shake
+               bombers + gun (first-person wave), renderScale, audio, music, audioRecovery, shake
   components/   IntroScene (globe dive), Scene, GameLoop, GridFloor, ReflectiveFloor,
                 City, Battery, Submarine, Bombers, GunRig, Missiles, Explosion,
                 Shockwave, Starfield, Trail
