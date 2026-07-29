@@ -110,7 +110,14 @@ surface the bar says so — the one time a strike is worth anything.
 - The globe's atmosphere is a **fresnel limb** plus a screen-space spill, its hue drifting
   slowly between cyan and indigo (`components/Atmosphere.tsx`), so the planet has a lit edge
   and something to fade into instead of a flat translucent shell
-- Procedural **WebAudio** sound (no audio assets); 8-bit title set in **Press Start 2P**,
+- An **adaptive soundtrack**, from [`@driftbox/engine`](https://www.npmjs.com/package/@driftbox/engine)
+  — a TR-808, a TR-909 and two TB-303s synthesised from scratch, so it is still no audio
+  assets. Each wave mode gets its own song (`game/musicCue.ts`), the tempo lifts as the
+  waves get harder, and the mix sweeps shut under the wave-cleared card. The engine is a
+  dynamic import, so the 19 kB of it is fetched on the first click rather than on the way
+  to the title screen
+- Procedural **WebAudio** sound effects (no audio assets), sharing one `AudioContext` with
+  the music so there is one mix and one gesture to unlock it; 8-bit title set in **Press Start 2P**,
   self-hosted (`src/fonts/`, SIL OFL) so the page makes no third-party requests — shipped
   twice, as `.woff2` for the stylesheet and `.woff` for the in-scene text, because troika
   (behind drei's `<Text>`) converts wOFF but throws on wOF2, and left to itself would
@@ -136,7 +143,7 @@ surface the bar says so — the one time a strike is worth anything.
 ```
 src/
   game/        constants, types, zustand store, incoming (MIRV/dodge), slbm (arcs/subs),
-               bombers + gun (first-person wave), renderScale, audio, shake
+               bombers + gun (first-person wave), renderScale, audio, music, shake
   components/   IntroScene (globe dive), Scene, GameLoop, GridFloor, ReflectiveFloor,
                 City, Battery, Submarine, Bombers, GunRig, Missiles, Explosion,
                 Shockwave, Starfield, Trail

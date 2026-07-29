@@ -19,6 +19,18 @@ export function unlockAudio() {
   ensureCtx()
 }
 
+/**
+ * The context the effects run on, for the music engine to share.
+ *
+ * One context rather than two. A second one is a second hardware output stream, it has
+ * its own clock that drifts against this one, and — the part that actually bites — the
+ * gesture that unlocks one does not unlock the other, so the music would stay silent
+ * until something happened to touch it.
+ */
+export function getAudioContext(): AudioContext | null {
+  return ensureCtx()
+}
+
 interface ToneOpts {
   freq: number
   toFreq?: number
