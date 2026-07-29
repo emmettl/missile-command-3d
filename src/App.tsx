@@ -14,10 +14,13 @@ import { RotateHint } from './ui/RotateHint'
 import { isMobile } from './game/device'
 import { START_FACTOR } from './game/renderScale'
 import { useRenderDpr } from './game/useRenderDpr'
+import { useMusic } from './game/useMusic'
 import { useGameStore } from './game/useGameStore'
 
 export default function App() {
   const status = useGameStore((s) => s.status)
+  // The soundtrack follows the wave mode; see musicCue.ts for which song goes where.
+  useMusic()
   const inIntro = status === 'menu' || status === 'launching'
   // Rendering opens at a pixel-budget cap, so a maximised window on a dense display
   // never asks the GPU for four times the frame it can fill, and then follows the frame
