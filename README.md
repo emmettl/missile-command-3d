@@ -114,7 +114,7 @@ surface the bar says so — the one time a strike is worth anything.
   — a TR-808, a TR-909 and two TB-303s synthesised from scratch, so it is still no audio
   assets. Each wave mode gets its own song (`game/musicCue.ts`), the tempo lifts as the
   waves get harder, and the mix sweeps shut under the wave-cleared card. The engine is a
-  dynamic import, so the 19 kB of it is fetched on the first click rather than on the way
+  dynamic import, so the 29 kB of it is fetched on the first click rather than on the way
   to the title screen
 - iOS takes the audio context away on a call or a backgrounding and never gives it back,
   so `game/audioRecovery.ts` keeps asking — on visibility, on the context's own
